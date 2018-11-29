@@ -42,7 +42,7 @@ def main():
     else:
         path='/home/alefunxo/Documents/Psycho/'
 
-    choice=False
+    choice=True
     print_=True
     pp_only=False
     if pp_only==False:

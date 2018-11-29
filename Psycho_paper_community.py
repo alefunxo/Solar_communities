@@ -258,9 +258,7 @@ def Price_definition(prices, PV_penetration,Batt_penetration,reso,path):
     # Select the PV profiles randomly and include the size in the name of the columns
     newcols=[]
     #We select from all the combinations of azimuth and inclination randomly
-    selection=np.random.choice(df_gen_comb.columns,int(np.floor(PV_penetration*(1-Batt_penetration)*74)))
-    #print(selection_batt)
-    #print(selection)
+    selection=np.random.choice(df_gen_comb.columns,len(selection_PV)-len(selection_batt))
     j=0
     k=0
     m=0
@@ -268,9 +266,6 @@ def Price_definition(prices, PV_penetration,Batt_penetration,reso,path):
     df_sel_batt=pd.DataFrame()
     df_com=pd.DataFrame()
     for i in df_demand.columns:
-        print(j)
-        print(k)
-        print(m)
         if i in selection_PV_Batt:
             if j==0:
                 df_sel_batt=df_gen_comb[selection_batt[j]]*sizes_batt[j]
