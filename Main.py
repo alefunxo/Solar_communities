@@ -25,24 +25,28 @@ def fn_timer(function):
         return result
     return function_timer
 @fn_timer
-def set_distributions():
-    #df=D_PV.PV_generation()
+def set_distributions(path):
+    #df=D_PV.PV_generation(path)
     #azimuths=[-30,-20,-10,0,10,20,30]
     azimuths=[-50,-40,-30,-20,-10,0,10,20,30,40,50]
     inclinations=[20,25,30,35,40,45]
     phi=48.1351 #Munich
     #D_PV.PV_output_inclinations(azimuths,inclinations,df,15,phi)
-    #D_PV.Distribution()
-    #D_PV.German_load()
-    D_PV.PV_gen_munich()#Once all run, re-run this one.
+    #D_PV.Distribution(path)
+    #D_PV.German_load(path)
+    D_PV.PV_gen_munich(path)#Once all run, re-run this one.
 @fn_timer
 def main():
+    if sys.platform=='win32':
+        path='C:/Users/alejandro/Documents/GitHub/Psycho/'
+    else:
+        path='/home/alefunxo/Documents/Psycho/'
 
     choice=False
     print_=True
     pp_only=False
     if pp_only==False:
-        set_distributions()
+        #set_distributions(path)
         if choice:
             parser = argparse.ArgumentParser()
             parser.add_argument(
@@ -61,14 +65,14 @@ def main():
 
             print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
             #ps.Price_definition(prices, args.PV_penetration/100,reso)
-            [Gen_balance,Batt_balance,Demand_balance]=psy_com.community_psycho(args.Batt_penetration/100,args.PV_penetration/100,reso)
+            [Gen_balance,Batt_balance,Demand_balance]=psy_com.community_psycho(args.Batt_penetration/100,args.PV_penetration/100,reso,path)
             print('Generation Balance:')
             print(Gen_balance)
             print('Battery Balance:')
             print(Batt_balance)
             print('Demand Balance:')
             print(Demand_balance)
-            pp.Post_processing(args.Batt_penetration/100,args.PV_penetration/100,print_)
+            pp.Post_processing(args.Batt_penetration/100,args.PV_penetration/100,print_,path)
         else:
             PV_array=[20,25,30,35,40,45,50]
             Batt_array=[25,50,75,100]
@@ -83,14 +87,14 @@ def main():
 
                     print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
                     #ps.Price_definition(prices, PV/100,reso)
-                    [Gen_balance,Batt_balance,Demand_balance]=psy_com.community_psycho(Batt/100,PV/100,reso)
+                    [Gen_balance,Batt_balance,Demand_balance]=psy_com.community_psycho(Batt/100,PV/100,reso,path)
                     print('Generation Balance:')
                     print(Gen_balance)
                     print('Battery Balance:')
                     print(Batt_balance)
                     print('Demand Balance:')
                     print(Demand_balance)
-                    pp.Post_processing(Batt/100,PV/100,print_)
+                    pp.Post_processing(Batt/100,PV/100,print_,path)
         print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
 
 
@@ -113,6 +117,6 @@ def main():
         reso='1h'
 
         print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
-        pp.Post_processing(args.Batt_penetration/100,args.PV_penetration/100,print_)
+        pp.Post_processing(args.Batt_penetration/100,args.PV_penetration/100,print_,path)
 if __name__== '__main__':
     main()

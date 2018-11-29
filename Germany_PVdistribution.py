@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import Model as M
 import numpy as np
 import os
+import sys
 
 # ## Skip up to German demand curves (GHI, T, PV Gen and load need to be run only once)
 
@@ -21,10 +22,11 @@ import os
 # ACHTUNG! GHI is in Wh/m2 we need it in W/m2
 
 # In[3]:
-def PV_generation():
+def PV_generation(path):
+
     print('##############################')
     print('PV_Gen')
-    df=pd.read_csv('C:/Users/alejandro/Documents/GitHub/Psycho//Input/Input_data_PV3.csv',
+    df=pd.read_csv(path+'Input/Input_data_PV3.csv',
                  encoding='utf8', sep=';',engine='python',index_col=12,parse_dates=[12],infer_datetime_format=True )
 
     df.index = df.index.tz_localize('UTC').tz_convert('CET')
@@ -85,15 +87,15 @@ def PV_output_inclinations(azimuths,inclinations,df,res,phi):
             print(out)
             df_out=pd.DataFrame(out)
             df_out=df_out.set_index(df.index)
-            name_file='C:/Users/alejandro/Documents/GitHub/Psycho//PV_Gen/PV_Generation_'+str(gamma)+'_'+str(beta)+'.csv'
+            name_file=path+'PV_Gen/PV_Generation_'+str(gamma)+'_'+str(beta)+'.csv'
             df_out.to_csv(name_file)
             i+=1
     return
-def Distribution():
+def Distribution(path):
     '''Get the distribution of PV size from Germany for sizes smaller than 10kW'''
     print('##############################')
     print('Distribution')
-    df=pd.read_csv('C:/Users/alejandro/Documents/GitHub/Psycho/Input/105_devices_utf8.csv', encoding='utf8', sep=';',engine='python',header=3)
+    df=pd.read_csv(path+'Input/105_devices_utf8.csv', encoding='utf8', sep=';',engine='python',header=3)
 
     df_sol=df[df.Anlagentyp=='Solarstrom']
     cap_sol=df_sol['Nennleistung(kWp_el)']
@@ -103,7 +105,7 @@ def Distribution():
     cap_sol=cap_sol.astype(float)
     res_sol=cap_sol[cap_sol<10]
     res_sol=res_sol.reset_index(drop=True)
-    res_sol.to_csv('C:/Users/alejandro/Documents/GitHub/Psycho/Input/PV_size_distribution.csv')
+    res_sol.to_csv(path+'Input/PV_size_distribution.csv')
     return()
 
 # # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -114,7 +116,7 @@ def Distribution():
 # see Representative electrical load profiles of residential buildings in Germany with an original temporal resolution of one second Tjaden et al. reshaped to 15 minutes resolution
 
 # In[2]:
-def German_load():
+def German_load(path):
 
     '''Get the yearly and daily average of the german load from DE_load_15_min_Power and put it in a folder called Input as csv'''
     print('##############################')
@@ -124,22 +126,23 @@ def German_load():
                        index_col=[0],parse_dates=[0],infer_datetime_format=True )
     df_15power.index=df_15power.index.tz_localize('UTC').tz_convert('Europe/Brussels')
     a=(df_15power.mean(axis=1)/4)
-    a.to_csv('C:/Users/alejandro/Documents/GitHub/Psycho/Input/German_yearly_average_load_curve_kWh.csv')
+    a.to_csv(path+'Input/German_yearly_average_load_curve_kWh.csv')
     b=(a.groupby([a.index.hour,a.index.minute]).mean())
-    b.to_csv('C:/Users/alejandro/Documents/GitHub/Psycho/Input/German_daily_average_load_curve_kWh.csv')
+    b.to_csv(path+'Input/German_daily_average_load_curve_kWh.csv')
     return()
 
     # ## PV generation Munich
-def PV_gen_munich():
+def PV_gen_munich(path):
     '''read the outputs in PV Gen and put them together in a df (normalized @ 1kW) delivered in a csv in the Input folder, called DE_gen_15_min_Energy.csv'''
     print('##############################')
     print('PV_gen_munich')
-    path='C:/Users/alejandro/Documents/GitHub/Psycho/PV_gen'
+    path2=path+'PV_gen/'
     mat=np.array(['Azimuth','Inclination','PV_output','Capacity_factor'])
 
-    for file in os.listdir(path):
+    for file in os.listdir(path2):
+
         #We want to have the PV_output, Capacity_factor, Inclination and Azimuth in a table (PV_munich)
-        df=pd.read_csv(path+file,
+        df=pd.read_csv(path2+file,
                      encoding='utf8', sep=',',engine='python',parse_dates=[0],infer_datetime_format=True,index_col=0)
 
         aux=file.split('_')
@@ -148,12 +151,13 @@ def PV_gen_munich():
 
     PV_munich=pd.DataFrame(mat[1:].astype(float).round(2),columns=mat[0])
     PV_munich.sort_values('PV_output',ascending=False)
-    result=pd.read_csv(path+os.listdir(path)[0], encoding='utf8', sep=',',
+
+    result=pd.read_csv(path2+os.listdir(path2)[0], encoding='utf8', sep=',',
                        engine='python',parse_dates=[0],infer_datetime_format=True,index_col=0)
-    result.columns=['PV_'+os.listdir(path)[0].split('_')[2]+'_'+os.listdir(path)[0].split('_')[3].split('.')[0]]
+    result.columns=['PV_'+os.listdir(path2)[0].split('_')[2]+'_'+os.listdir(path2)[0].split('_')[3].split('.')[0]]
     result.index = result.index.tz_localize('UTC').tz_convert('CET')
-    for file in os.listdir(path)[1:]:
-        df=pd.read_csv(path+file, encoding='utf8', sep=',',engine='python',parse_dates=[0],infer_datetime_format=True,index_col=0)
+    for file in os.listdir(path2)[1:]:
+        df=pd.read_csv(path2+file, encoding='utf8', sep=',',engine='python',parse_dates=[0],infer_datetime_format=True,index_col=0)
         df.columns=['PV_'+file.split('_')[2]+'_'+file.split('_')[3].split('.')[0]]
         df.index = df.index.tz_localize('UTC').tz_convert('CET')
         result = pd.concat([result, df], axis=1, join='inner')
@@ -162,5 +166,5 @@ def PV_gen_munich():
     result=(result/4/230)
     #result=result.drop('Index')
     #result.index=pd.to_datetime(result.index)
-    result.to_csv('C:/Users/alejandro/Documents/GitHub/Psycho/Input/DE_gen_15_min_Energy.csv')
+    result.to_csv(path+'Input/DE_gen_15_min_Energy.csv')
     return()

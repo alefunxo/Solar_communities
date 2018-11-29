@@ -213,16 +213,16 @@ def graph_average(aux_no_comm,aux_comm,pdf):
     return
 
 
-def Post_processing(Batt_penetration,PV_penetration,print_):
+def Post_processing(Batt_penetration,PV_penetration,print_,path):
 
-    df_no_comm=pd.read_csv('Output/no_community_{}_{}.csv'.format(PV_penetration,Batt_penetration),encoding='utf8', sep=',',header=0,
+    df_no_comm=pd.read_csv(path+'Output/no_community_{}_{}.csv'.format(PV_penetration,Batt_penetration),encoding='utf8', sep=',',header=0,
     engine='python',index_col=0, parse_dates=[1],infer_datetime_format=True,
     names=['index','date','demand','gen','SOC','PV_batt', 'PV_load', 'PV_grid', 'E_dis','Batt_load','Batt_grid','grid_load','PV_losses','Batt_losses','flag','type','df','prices'])
 
     df_no_comm.loc[:,'date'] =pd.DatetimeIndex( df_no_comm.loc[:,'date']).tz_localize('UTC').tz_convert('CET')
 
 
-    df_comm=pd.read_csv('Output/community_{}_{}.csv'.format(PV_penetration,Batt_penetration),encoding='utf8', sep=',',
+    df_comm=pd.read_csv(path+'Output/community_{}_{}.csv'.format(PV_penetration,Batt_penetration),encoding='utf8', sep=',',
                         engine='python',index_col=0,header=0, parse_dates=[1],infer_datetime_format=True,names=['index','date','demand','gen','SOC','PV_batt', 'PV_load', 'PV_comm', 'E_dis','Batt_load','Batt_comm','comm_load','PV_losses','Batt_losses','flag','type','df','prices'])
 
     df_comm.loc[:,'date'] =pd.DatetimeIndex( df_comm.loc[:,'date']).tz_localize('UTC').tz_convert('CET')
@@ -268,8 +268,8 @@ def Post_processing(Batt_penetration,PV_penetration,print_):
     aux_no_comm_bill=df_no_comm.groupby(df_no_comm.df).sum()
     #print(aux_comm_bill)
     #print(aux_no_comm_bill)
-    aux_no_comm_bill.to_csv('Input/bill.csv')
-    aux_comm_bill.to_csv('Input/bill_comm.csv')
+    aux_no_comm_bill.to_csv(path+'Input/bill.csv')
+    aux_comm_bill.to_csv(path+'Input/bill_comm.csv')
 
     df=pd.DataFrame(np.array([aux_comm_bill.type,aux_comm_bill.bill,aux_no_comm_bill.bill]).T)
 
@@ -278,7 +278,7 @@ def Post_processing(Batt_penetration,PV_penetration,print_):
 
     [data_no_comm,data_comm]=community_ind(aux_no_comm,aux_comm)
     if print_:
-        file='Output/Output_{}_{}.pdf'.format(PV_penetration*100,Batt_penetration*100)
+        file=path+'Output/Output_{}_{}.pdf'.format(PV_penetration*100,Batt_penetration*100)
         print(file)
         with  PdfPages(file) as pdf:
             graphs_gral(aux_comm,pdf)

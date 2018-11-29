@@ -31,12 +31,12 @@ def find_interval(x, partition):
             return i-1
     return -1
 
-def sell_prob(SOC,price,Capacity,case):
+def sell_prob(SOC,price,Capacity,case,path):
     #define the matrix of probs
     if case=='PV':
-        prob_mat=pd.read_table('Input/P_selling_by_price_and_autarky2.txt',sep='\t',index_col=[0])
+        prob_mat=pd.read_table(path+'Input/P_selling_by_price_and_autarky2.txt',sep='\t',index_col=[0])
     else:#when selling from battery
-        prob_mat=pd.read_table('Input/P_selling_by_price_and_autarky_2.txt',sep='\t',index_col=[0])*0
+        prob_mat=pd.read_table(path+'Input/P_selling_by_price_and_autarky_2.txt',sep='\t',index_col=[0])*0
     if SOC==0:
         out=0
     else:
@@ -97,7 +97,7 @@ def PV_SC(df,Batt,Conv_eff,Inv_eff,endo):
 
 # # If the client agreees (Probability function) we discharge 1 kWh of the battery
 
-def PV_SC_probs2(df,Batt,Conv_eff,Inv_eff,endo):
+def PV_SC_probs2(df,Batt,Conv_eff,Inv_eff,endo,path):
     #The choice from the user should be done only if PV_GEN<LOAD
     for i in range(len(df.index[:endo])):
         if df.gen[i]<df.demand[i]/Conv_eff/Inv_eff:#No surplus including losses
@@ -112,7 +112,7 @@ def PV_SC_probs2(df,Batt,Conv_eff,Inv_eff,endo):
                     df.PV_load[i]=df.gen[i]*Conv_eff*Inv_eff#after inverter
                     df.PV_losses[i]=df.gen[i]*(1-Conv_eff*Inv_eff)
                     if df.SOC[i-1]-aux>Batt.SOC_min:
-                        if (sell_prob(df.SOC[i-1]-aux,df.prices[i],Batt.Capacity,'batt')&(df.index.hour[i]<12)):
+                        if (sell_prob(df.SOC[i-1]-aux,df.prices[i],Batt.Capacity,'batt',path)&(df.index.hour[i]<12)):
                             df.flag[i]=1
                             df.Batt_load[i]=aux*Inv_eff#after inverter
                             df.E_dis[i]=min(1,df.SOC[i-1]-Batt.SOC_min-aux)#the client agree to sell 1Kwh from batt
@@ -157,7 +157,7 @@ def PV_SC_probs2(df,Batt,Conv_eff,Inv_eff,endo):
                 #Here it depends on the question. Is the question do you prefer to sell 1kWh rather than store it in this hour?
                 #Or is it do you prefer to sell rather than store in this hour?
                 #here we take the first approach.
-                if sell_prob(df.SOC[i-1],df.prices[i],Batt.Capacity,'PV'):
+                if sell_prob(df.SOC[i-1],df.prices[i],Batt.Capacity,'PV',path):
                     df.flag[i]=2
                     if df.SOC[i-1]<Batt.SOC_max-0.0001:#then if battery not full, charge
                         if (df.gen[i]*Conv_eff-df.demand[i]/Inv_eff)>1:
@@ -205,25 +205,25 @@ def PV_SC_probs2(df,Batt,Conv_eff,Inv_eff,endo):
 
 # Let's first create the community, it consists of 74 households, 37 of which have PV (on which the prices are based and can be found in Price_setup.ipynb) and 18 (floor of 25%) will have a battery. The first step is to match PV with demand, then among those houses choose which ones will have a battery and then for the latter run the simulation. For the whole community calculate different indicators in the last step.
 
-def Price_definition(prices, PV_penetration,Batt_penetration,reso):
+def Price_definition(prices, PV_penetration,Batt_penetration,reso,path):
     '''Takes the prices and PV_penetration as inputs, reads the df of generation in Munich and the PV_size_distribution, and RANDOMLY chooses the sizes for the X houses (RANDOMLY selected) and produces an output at 15 min resolution that can be resampled @ 1h ir resample==True'''
 
     print('################################################')
     print('Getting prices')
-    df_gen_comb=pd.read_csv('Input/DE_gen_15_min_Energy.csv', encoding='utf8', sep=',',engine='python',parse_dates=[0],
+    df_gen_comb=pd.read_csv(path+'Input/DE_gen_15_min_Energy.csv', encoding='utf8', sep=',',engine='python',parse_dates=[0],
                    infer_datetime_format=True,index_col=0)
 
     df_gen_comb.index = df_gen_comb.index.tz_localize('UTC').tz_convert('CET')
 
     if reso=='1h':
-        df_demand=pd.read_csv('Input/DE_load_15_min_Power.csv', encoding='utf8', sep=',',
+        df_demand=pd.read_csv(path+'Input/DE_load_15_min_Power.csv', encoding='utf8', sep=',',
                               engine='python',index_col=0, parse_dates=[0],infer_datetime_format=True )/4
         df_demand=df_demand.resample('1H').sum()
         df_demand.index = df_demand.index.tz_localize('UTC').tz_convert('CET')
         df_gen_comb=df_gen_comb.resample('1H').sum()
         df_demand.index=df_gen_comb.index
     else:
-        df_demand=pd.read_csv('Input/DE_load_15_min_Power.csv', encoding='utf8', sep=',',
+        df_demand=pd.read_csv(path+'Input/DE_load_15_min_Power.csv', encoding='utf8', sep=',',
                               engine='python',index_col=0, parse_dates=[0],infer_datetime_format=True )/4
         df_demand.index = df_demand.index.tz_localize('UTC').tz_convert('CET')
         df_demand.index=df_gen_comb.index
@@ -241,8 +241,8 @@ def Price_definition(prices, PV_penetration,Batt_penetration,reso):
 
     # The PV size for every house must be defined. If the household have a Battery the PV size comes from another distribution
 
-    PV_sizes=pd.read_csv('Input/PV_size_distribution.csv',index_col=0,header=None)
-    PV_sizes_batt=pd.read_csv('Input/PV_size_distribution.csv',index_col=0,header=None)
+    PV_sizes=pd.read_csv(path+'Input/PV_size_distribution.csv',index_col=0,header=None)
+    PV_sizes_batt=pd.read_csv(path+'Input/PV_size_distribution.csv',index_col=0,header=None)
     #The output of this function: should be a combined df with
     #df_prices,df_generation,df_demand
     count_batt, division_batt = np.histogram(PV_sizes_batt)
@@ -268,7 +268,9 @@ def Price_definition(prices, PV_penetration,Batt_penetration,reso):
     df_sel_batt=pd.DataFrame()
     df_com=pd.DataFrame()
     for i in df_demand.columns:
-
+        print(j)
+        print(k)
+        print(m)
         if i in selection_PV_Batt:
             if j==0:
                 df_sel_batt=df_gen_comb[selection_batt[j]]*sizes_batt[j]
@@ -324,18 +326,18 @@ def Price_definition(prices, PV_penetration,Batt_penetration,reso):
     for i in range(len(prices)):
         Prices.loc[aux>=step*i,'prices']=prices[i]
     if reso=='1h':
-        df_sel.to_csv('Input/DE_gen_1_h_Energy_sizes_{}.csv'.format(PV_penetration))
-        Prices.to_csv('Input/DE_price_1_h_{}.csv'.format(PV_penetration))
+        df_sel.to_csv(path+'Input/DE_gen_1_h_Energy_sizes_{}.csv'.format(PV_penetration))
+        Prices.to_csv(path+'Input/DE_price_1_h_{}.csv'.format(PV_penetration))
 
     else:
-        df_sel.to_csv('Input/DE_gen_15_min_Energy_sizes_{}.csv'.format(PV_penetration))
-        Prices.to_csv('Input/DE_price_15_min_{}.csv'.format(PV_penetration))
+        df_sel.to_csv(path+'Input/DE_gen_15_min_Energy_sizes_{}.csv'.format(PV_penetration))
+        Prices.to_csv(path+'Input/DE_price_15_min_{}.csv'.format(PV_penetration))
 
     print('Prices ok')
     print('################################################')
 
     return [df_demand,df_sel,Prices,selection_PV,selection_PV_Batt]
-def community_psycho(Batt_penetration,PV_penetration,reso):
+def community_psycho(Batt_penetration,PV_penetration,reso,path):
     '''
 
         'Output/community_{}_{}.csv'.format(PV_penetration,Batt_penetration))
@@ -348,7 +350,7 @@ def community_psycho(Batt_penetration,PV_penetration,reso):
     prices=np.array([0.07,.10,.13,.16,.19,.22,.25,.28])
     #prices=np.flip(prices)
     Batt=pc.Battery(10,'test')
-    [df_demand,df_generation,df_prices,selection_PV,selection_PV_Batt]=Price_definition(prices, PV_penetration,Batt_penetration,reso)
+    [df_demand,df_generation,df_prices,selection_PV,selection_PV_Batt]=Price_definition(prices, PV_penetration,Batt_penetration,reso,path)
 
     print('################################################')
     print('Simulation begins')
@@ -436,7 +438,7 @@ def community_psycho(Batt_penetration,PV_penetration,reso):
             df1.columns=['demand','gen','SOC','PV_batt', 'PV_load', 'PV_grid', 'E_dis','Batt_load',
                     'Batt_grid', 'grid_load','PV_losses','Batt_losses','flag','type','df','prices']
             if i in selection_PV_Batt:# PV and Batt
-                df_prob=PV_SC_probs2(df1,Batt,Conv_eff,Inv_eff,endo)
+                df_prob=PV_SC_probs2(df1,Batt,Conv_eff,Inv_eff,endo,path)
                 df_prob.loc[:,'type']=2
                 df_prob=df_prob.reset_index()
                 if i=='0':
@@ -486,8 +488,8 @@ def community_psycho(Batt_penetration,PV_penetration,reso):
     print(df_comm.sum().round(2))
     print('End of simulation with community exchange')
     print('###################################################')
-    df_comm.to_csv('Output/community_{}_{}.csv'.format(PV_penetration,Batt_penetration))
-    df_no_comm.to_csv('Output/no_community_{}_{}.csv'.format(PV_penetration,Batt_penetration))
+    df_comm.to_csv(path+'Output/community_{}_{}.csv'.format(PV_penetration,Batt_penetration))
+    df_no_comm.to_csv(path+'Output/no_community_{}_{}.csv'.format(PV_penetration,Batt_penetration))
 
     Gen_balance=(df_comm.gen-(df_comm.PV_batt+df_comm.PV_load+df_comm.PV_comm+df_comm.PV_losses))[:endo].sum()
 
