@@ -96,6 +96,15 @@ def community_ind(aux_no_comm,aux_comm):
     data_comm = [Direct_in_house_comm,Indirect_in_house_comm,Total_out_house_comm,Total_out_grid_comm,Total_losses_comm]
 
     return[data_no_comm,data_comm]
+def graph_prices(df,pdf):
+    fig, axs = plt.subplots(1,1,figsize=(10, 10))#, subplot_kw=dict(aspect="equal"))
+    print(df.head())
+    print(df.keys())
+    df[df.df==0].prices.plot()
+    #plt.tight_layout()
+    pdf.savefig()
+    return
+
 
 def graph_autarky(aux_no_comm,aux_comm,pdf):
     grid=(aux_no_comm.grid_load.sum())/aux_no_comm.demand.sum()
@@ -116,7 +125,7 @@ def graph_autarky(aux_no_comm,aux_comm,pdf):
     axs[2].legend(wedges, labels,
               title="Autarky",
               loc="center left",
-              bbox_to_anchor=(1, 0, 0.5, 1))
+              bbox_to_anchor=(.5, -.7, 0.5, 1))
     plt.setp(autotexts, size=14, weight="bold")
     wedges, texts, autotexts = axs[1].pie(data2, autopct=lambda pct: func(pct, data),
                                       textprops=dict(color="w"))
@@ -138,15 +147,15 @@ def graph_sc(data,data2,pdf):
 
     fig, axs = plt.subplots(1,2,figsize=(10, 10), subplot_kw=dict(aspect="equal"))
 
-    labels = ['Direct_in_house','Through_Battery','Total_comm_load','Total_to_grid','Total_losses']
+    labels = ['Direct SC','Battery discharge','community consumed','exported to grid','Total_losses']
 
 
     wedges, texts, autotexts = axs[0].pie(data, autopct=lambda pct: func(pct, data),
                                       textprops=dict(color="w"))
     axs[1].legend(wedges, labels,
               title="Self-Consumption",
-              loc="center left",
-              bbox_to_anchor=(1, 0, 0.5, 1))
+              loc="center right",
+              bbox_to_anchor=(.5, -.7, 0.5, 1))
     plt.setp(autotexts, size=14, weight="bold")
     wedges, texts, autotexts = axs[1].pie(data2, autopct=lambda pct: func(pct, data),
                                       textprops=dict(color="w"))
@@ -176,19 +185,23 @@ def graph_average(aux_no_comm,aux_comm,pdf):
     (aux_comm_mean.comm_grid).plot(label='export community to grid')
     (aux_comm_mean.grid_demand).plot(label='grid to community (new demand)')
     #(aux_no_comm_mean.grid_demand).plot(label='grid to community no user ')
+    plt.ylim(-1,100)
     plt.title('',size=18)
     plt.xlabel('Time',size=18)
     plt.ylabel('kWh',size=18)
     plt.legend(loc=2)
+    plt.tight_layout()
     pdf.savefig()
     plt.figure(figsize=(10,10))
     (aux_comm_mean.demand).plot(label='demand')
     (aux_comm_mean.grid_demand).plot(label='grid to community')
     (aux_no_comm_mean.grid_demand).plot(label='grid to community no user ')
     (aux_comm_mean.grid_demand*0).plot(label='zero')
-    plt.title('Comparison SOC between community with and w/o user behaviour.',size=18)
+    #plt.title('Comparison SOC between community with and w/o user behaviour.',size=18)
+    plt.ylim(-1,100)
     plt.xlabel('Time',size=18)
     plt.ylabel('kWh',size=18)
+    plt.tight_layout()
     plt.legend(loc=2)
     pdf.savefig()
     plt.figure(figsize=(10,10))
@@ -201,13 +214,16 @@ def graph_average(aux_no_comm,aux_comm,pdf):
     plt.ylabel('kWh',size=18)
     plt.legend(loc=2)
     plt.figure(figsize=(10,10))
-    (aux_comm_mean.SOC/170).plot()
-    (aux_no_comm_mean.SOC/170).plot(legend='No behaviour')
+    print(aux_comm_mean.SOC.max())
+    print(aux_comm_mean.SOC[0])
+    print(';$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
+    (aux_comm_mean.SOC).plot()
+    (aux_no_comm_mean.SOC).plot(label='No behaviour')
 
-    #plt.title('Comparison SOC between community with and w/o user behaviour.',size=18)
-
+    plt.title('Comparison SOC between community with and w/o user behaviour.',size=18)
+    #(aux_comm_mean.grid_demand*0).plot(label='zero')
     plt.xlabel('Time',size=18)
-    plt.ylabel('%',size=18)
+    plt.ylabel('SOC',size=18)
     plt.legend(loc=2)
     pdf.savefig()
     return
@@ -274,17 +290,20 @@ def Post_processing(Batt_penetration,PV_penetration,print_,path):
     df=pd.DataFrame(np.array([aux_comm_bill.type,aux_comm_bill.bill,aux_no_comm_bill.bill]).T)
 
 
-
+    print('amount of times energy when surplus was exchanged was: {}'.format(df_comm[(df_comm.flag==4)].flag.sum()/4))
+    print('amount of times energy when no surplus was exchanged was: {}'.format(df_comm[(df_comm.flag==1)].flag.sum()))
 
     [data_no_comm,data_comm]=community_ind(aux_no_comm,aux_comm)
     if print_:
-        file=path+'Output/Output_{}_{}.pdf'.format(PV_penetration*100,Batt_penetration*100)
+        file=path+'Output/Output_{}_{}_train.pdf'.format(PV_penetration*100,Batt_penetration*100)
         print(file)
         with  PdfPages(file) as pdf:
+            print('pdf')
             graphs_gral(aux_comm,pdf)
             graph_average(aux_no_comm,aux_comm,pdf)
             graph_autarky(aux_no_comm,aux_comm,pdf)
             graph_sc(data_no_comm,data_comm,pdf)
+            graph_prices(df_comm,pdf)
             plt.figure(figsize=(10,10))
             df.columns=['types','bill_comm','bill']
 
@@ -294,8 +313,3 @@ def Post_processing(Batt_penetration,PV_penetration,print_,path):
             df.reset_index().boxplot(column='bill', by='types')
             pdf.savefig()
             d = pdf.infodict()
-            d['Title'] = 'Multipage PDF Example'
-            d['Keywords'] = 'PdfPages multipage keywords author title subject'
-
-
-    return [data_no_comm,data_comm]

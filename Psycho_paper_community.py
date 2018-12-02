@@ -36,7 +36,7 @@ def sell_prob(SOC,price,Capacity,case,path):
     if case=='PV':
         prob_mat=pd.read_table(path+'Input/P_selling_by_price_and_autarky2.txt',sep='\t',index_col=[0])
     else:#when selling from battery
-        prob_mat=pd.read_table(path+'Input/P_selling_by_price_and_autarky_2.txt',sep='\t',index_col=[0])*0
+        prob_mat=pd.read_table(path+'Input/P_selling_by_price_and_autarky_2.txt',sep='\t',index_col=[0])
     if SOC==0:
         out=0
     else:
@@ -112,8 +112,12 @@ def PV_SC_probs2(df,Batt,Conv_eff,Inv_eff,endo,path):
                     df.PV_load[i]=df.gen[i]*Conv_eff*Inv_eff#after inverter
                     df.PV_losses[i]=df.gen[i]*(1-Conv_eff*Inv_eff)
                     if df.SOC[i-1]-aux>Batt.SOC_min:
+                        #print(df.index.hour[i])
                         if (sell_prob(df.SOC[i-1]-aux,df.prices[i],Batt.Capacity,'batt',path)&(df.index.hour[i]<12)):
-                            df.flag[i]=1
+                            #Sell from the battery to the community
+                            #Is this Working???
+                            #print('######UUUUU#####')
+                            df.flag[i]=1#Sell from battery
                             df.Batt_load[i]=aux*Inv_eff#after inverter
                             df.E_dis[i]=min(1,df.SOC[i-1]-Batt.SOC_min-aux)#the client agree to sell 1Kwh from batt
                             df.flag[i]=1
@@ -161,7 +165,7 @@ def PV_SC_probs2(df,Batt,Conv_eff,Inv_eff,endo,path):
                     df.flag[i]=2
                     if df.SOC[i-1]<Batt.SOC_max-0.0001:#then if battery not full, charge
                         if (df.gen[i]*Conv_eff-df.demand[i]/Inv_eff)>1:
-                            df.flag[i]=3
+                            df.flag[i]=3#charge
                             df.PV_batt[i]=min((df.gen[i]*Conv_eff-df.demand[i]/Inv_eff)-1,
                                               (Batt.SOC_max-df.SOC[i-1])*Conv_eff)
                             df.SOC[i]=df.SOC[i-1]+df.PV_batt[i]*Batt.Efficiency
@@ -169,7 +173,7 @@ def PV_SC_probs2(df,Batt,Conv_eff,Inv_eff,endo,path):
                             df.PV_grid[i]=(df.gen[i]*Conv_eff-df.PV_batt[i])*Inv_eff-df.PV_load[i]
                             df.grid_load[i]=0
                         else:
-                            df.flag[i]=4
+                            df.flag[i]=4#instead of charging you sell
                             df.PV_batt[i]=0
                             df.SOC[i]=df.SOC[i-1]+df.PV_batt[i]*Batt.Efficiency
                             df.Batt_losses[i]=df.PV_batt[i]*(1-Batt.Efficiency)
@@ -205,7 +209,7 @@ def PV_SC_probs2(df,Batt,Conv_eff,Inv_eff,endo,path):
 
 # Let's first create the community, it consists of 74 households, 37 of which have PV (on which the prices are based and can be found in Price_setup.ipynb) and 18 (floor of 25%) will have a battery. The first step is to match PV with demand, then among those houses choose which ones will have a battery and then for the latter run the simulation. For the whole community calculate different indicators in the last step.
 
-def Price_definition(prices, PV_penetration,Batt_penetration,reso,path):
+def Price_definition(prices, PV_penetration,Batt_penetration,reso,path,day_sel):
     '''Takes the prices and PV_penetration as inputs, reads the df of generation in Munich and the PV_size_distribution, and RANDOMLY chooses the sizes for the X houses (RANDOMLY selected) and produces an output at 15 min resolution that can be resampled @ 1h ir resample==True'''
 
     print('################################################')
@@ -330,22 +334,43 @@ def Price_definition(prices, PV_penetration,Batt_penetration,reso,path):
 
     print('Prices ok')
     print('################################################')
+    if day_sel=='winter':
+        #Prices[Prices.index.hour<23]=.1
+        #Prices[Prices.index.hour<7]=.20
 
+        #Prices[Prices.index.hour>17]=.28
+
+        df_demand=df_demand[(df_demand.index.month==1)&(df_demand.index.day==1)]
+        df_sel=df_sel[(df_sel.index.month==1)&(df_sel.index.day==1)]
+        Prices=Prices[(Prices.index.month==1)&(Prices.index.day==1)]
+        print(Prices)
+    elif day_sel=='summer':
+        Prices[Prices.index.hour<23]=.16
+        Prices[Prices.index.hour<10]=.22
+
+        Prices[Prices.index.hour>17]=.28
+
+        df_demand=df_demand[(df_demand.index.month==6)&(df_demand.index.day==1)]
+        df_sel=df_sel[(df_sel.index.month==6)&(df_sel.index.day==1)]
+        Prices=Prices[(Prices.index.month==6)&(Prices.index.day==1)]
+        print(Prices)
     return [df_demand,df_sel,Prices,selection_PV,selection_PV_Batt]
-def community_psycho(Batt_penetration,PV_penetration,reso,path):
+def community_psycho(Batt_penetration,PV_penetration,reso,path,day_sel):
     '''
 
         'Output/community_{}_{}.csv'.format(PV_penetration,Batt_penetration))
         'Output/no_community_{}_{}.csv'.format(PV_penetration,Batt_penetration))
     '''
-
-    endo=8760
+    if (day_sel=='winter') or (day_sel=='summer'):
+        endo=96
+    else:
+        endo=8760
     Conv_eff=0.98
     Inv_eff=0.95
     prices=np.array([0.07,.10,.13,.16,.19,.22,.25,.28])
     #prices=np.flip(prices)
     Batt=pc.Battery(10,'test')
-    [df_demand,df_generation,df_prices,selection_PV,selection_PV_Batt]=Price_definition(prices, PV_penetration,Batt_penetration,reso,path)
+    [df_demand,df_generation,df_prices,selection_PV,selection_PV_Batt]=Price_definition(prices, PV_penetration,Batt_penetration,reso,path,day_sel)
 
     print('################################################')
     print('Simulation begins')
@@ -367,6 +392,7 @@ def community_psycho(Batt_penetration,PV_penetration,reso,path):
 
             df1.columns=['demand','gen','SOC','PV_batt', 'PV_load', 'PV_grid', 'E_dis','Batt_load',
                     'Batt_grid', 'grid_load','PV_losses','Batt_losses','flag','type','df','prices']
+            df1.SOC[0]=5
             if i in selection_PV_Batt:# PV and Batt
                 df_no_prob=PV_SC(df1,Batt,Conv_eff,Inv_eff,endo)
                 df_no_prob.loc[:,'type']=2
@@ -432,6 +458,7 @@ def community_psycho(Batt_penetration,PV_penetration,reso,path):
 
             df1.columns=['demand','gen','SOC','PV_batt', 'PV_load', 'PV_grid', 'E_dis','Batt_load',
                     'Batt_grid', 'grid_load','PV_losses','Batt_losses','flag','type','df','prices']
+            df1.SOC[0]=5
             if i in selection_PV_Batt:# PV and Batt
                 df_prob=PV_SC_probs2(df1,Batt,Conv_eff,Inv_eff,endo,path)
                 df_prob.loc[:,'type']=2

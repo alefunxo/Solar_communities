@@ -56,6 +56,7 @@ def main():
                 'Batt_penetration', choices=range(0,101),type=int,
                 help='Choice Battery penetration (among houses with PV) between 0 and 100%')
             args=parser.parse_args()
+            day_sel='summer'
             print(args)
             print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
             print('PV and battery penetration selected')
@@ -65,7 +66,7 @@ def main():
 
             print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
             #ps.Price_definition(prices, args.PV_penetration/100,reso)
-            [Gen_balance,Batt_balance,Demand_balance]=psy_com.community_psycho(args.Batt_penetration/100,args.PV_penetration/100,reso,path)
+            [Gen_balance,Batt_balance,Demand_balance]=psy_com.community_psycho(args.Batt_penetration/100,args.PV_penetration/100,reso,path,day_sel)
             print('Generation Balance:')
             print(Gen_balance)
             print('Battery Balance:')
@@ -87,7 +88,7 @@ def main():
 
                     print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
                     #ps.Price_definition(prices, PV/100,reso)
-                    [Gen_balance,Batt_balance,Demand_balance]=psy_com.community_psycho(Batt/100,PV/100,reso,path)
+                    [Gen_balance,Batt_balance,Demand_balance]=psy_com.community_psycho(Batt/100,PV/100,reso,path,day_sel)
                     print('Generation Balance:')
                     print(Gen_balance)
                     print('Battery Balance:')
