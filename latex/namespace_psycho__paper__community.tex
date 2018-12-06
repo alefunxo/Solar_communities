@@ -1,0 +1,148 @@
+\hypertarget{namespace_psycho__paper__community}{}\section{Psycho\+\_\+paper\+\_\+community Namespace Reference}
+\label{namespace_psycho__paper__community}\index{Psycho\+\_\+paper\+\_\+community@{Psycho\+\_\+paper\+\_\+community}}
+
+
+Created on Wed Feb 28 09\+:47\+:22 2018 Author Alejandro Pena-\/\+Bello \href{mailto:alejandro.penabello@unige.ch}{\tt alejandro.\+penabello@unige.\+ch} Script developed for the project developed together with the Consumer Decision and Sustainable Behavior Lab to include the user preferences in the charging and discharging of the battery.  
+
+
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespace_psycho__paper__community_a281baf6a407d30a22e485f5f76a62c3c}{find\+\_\+interval}} (x, partition)
+\item 
+def \mbox{\hyperlink{namespace_psycho__paper__community_a3e0bea6729bebaf15916a97fbf15e5ee}{sell\+\_\+prob}} (S\+OC, price, Capacity, case, path)
+\item 
+def \mbox{\hyperlink{namespace_psycho__paper__community_abefde718373bb160a718d8db9cd371b8}{P\+V\+\_\+\+SC}} (df, Batt, Conv\+\_\+eff, Inv\+\_\+eff, endo)
+\item 
+\mbox{\Hypertarget{namespace_psycho__paper__community_ad44c65eda4460f8930299994447872ee}\label{namespace_psycho__paper__community_ad44c65eda4460f8930299994447872ee}} 
+def {\bfseries P\+V\+\_\+\+S\+C\+\_\+probs2} (df, Batt, Conv\+\_\+eff, Inv\+\_\+eff, endo, path)
+\item 
+def \mbox{\hyperlink{namespace_psycho__paper__community_a55c0842aa06303ca13fb7c4124534a18}{Price\+\_\+definition}} (prices, P\+V\+\_\+penetration, Batt\+\_\+penetration, reso, path, day\+\_\+sel)
+\item 
+def \mbox{\hyperlink{namespace_psycho__paper__community_a40671524b3288de32169be3816854d27}{community\+\_\+psycho}} (Batt\+\_\+penetration, P\+V\+\_\+penetration, reso, path, day\+\_\+sel)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Created on Wed Feb 28 09\+:47\+:22 2018 Author Alejandro Pena-\/\+Bello \href{mailto:alejandro.penabello@unige.ch}{\tt alejandro.\+penabello@unige.\+ch} Script developed for the project developed together with the Consumer Decision and Sustainable Behavior Lab to include the user preferences in the charging and discharging of the battery. 
+
+We use a deterministic approach and include probabilities to discharge the battery to the grid in the frame of a community with P2P energy trading. The script has been tested in Linux and Windows \subsubsection*{I\+N\+P\+U\+TS }
+
+Inputs are automatically saved in the \textquotesingle{}Output\textquotesingle{} file \subsubsection*{O\+U\+T\+P\+U\+TS }
+
+Outputs are automatically saved in the \textquotesingle{}Output\textquotesingle{} file \subsubsection*{T\+O\+DO }
+
+User Interface \subsubsection*{Requirements }
+
+Pandas, numpy, itertools,sys,glob,multiprocessing, timeimport pandas as pd  D\+C-\/coupled P\+V-\/\+Battery system with integrated inverter used in this study.  
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{namespace_psycho__paper__community_a40671524b3288de32169be3816854d27}\label{namespace_psycho__paper__community_a40671524b3288de32169be3816854d27}} 
+\index{Psycho\+\_\+paper\+\_\+community@{Psycho\+\_\+paper\+\_\+community}!community\+\_\+psycho@{community\+\_\+psycho}}
+\index{community\+\_\+psycho@{community\+\_\+psycho}!Psycho\+\_\+paper\+\_\+community@{Psycho\+\_\+paper\+\_\+community}}
+\subsubsection{\texorpdfstring{community\+\_\+psycho()}{community\_psycho()}}
+{\footnotesize\ttfamily def Psycho\+\_\+paper\+\_\+community.\+community\+\_\+psycho (\begin{DoxyParamCaption}\item[{}]{Batt\+\_\+penetration,  }\item[{}]{P\+V\+\_\+penetration,  }\item[{}]{reso,  }\item[{}]{path,  }\item[{}]{day\+\_\+sel }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Description
+-----------
+This function calls the two functions PV_SC and PV_SC_probs2 to calculate the balance of the houses when they are individually operated and when they are in a community in order to have a comparison.
+Three scenarios are analyzed.
+    1. No community: when every house is connected directly to the grid and does not share within a community.
+    2. Community No behaviour: when every house is in the community and there is only one physical connection to the grid. There is not consumer behaviour.
+    3. Community behaviour: when every house is in the community and there is only one physical connection to the grid. Consumer behaviour is included.
+For scenarios 1 and 2 PV_SC is used and then the data is processed differently.
+For scenario 3 PV_SC_probs2 is used (includes consumer behaviour in the form of probability distributions)
+In a first instance the prices are calculated using Price_definition function
+'Output/community_{}_{}.csv'.format(PV_penetration,Batt_penetration))
+'Output/no_community_{}_{}.csv'.format(PV_penetration,Batt_penetration))
+Parameters
+------
+Batt_penetration: float; Battery penetration in the community
+PV_penetration: float; PV penetration in the community
+reso: float; resolution either 1h or 15 minutes
+path:  string; path where the project is kept
+day_sel: string; either winter, summer or other to simulate one day on winter, summer or all the year
+
+Return
+------
+Gen_balance: float; Balance of generation must be zero
+Batt_balance float; Balance of the battery must be zero
+Demand_balance float; Balance of the demand must be zero
+TODO
+------\end{DoxyVerb}
+ \mbox{\Hypertarget{namespace_psycho__paper__community_a281baf6a407d30a22e485f5f76a62c3c}\label{namespace_psycho__paper__community_a281baf6a407d30a22e485f5f76a62c3c}} 
+\index{Psycho\+\_\+paper\+\_\+community@{Psycho\+\_\+paper\+\_\+community}!find\+\_\+interval@{find\+\_\+interval}}
+\index{find\+\_\+interval@{find\+\_\+interval}!Psycho\+\_\+paper\+\_\+community@{Psycho\+\_\+paper\+\_\+community}}
+\subsubsection{\texorpdfstring{find\+\_\+interval()}{find\_interval()}}
+{\footnotesize\ttfamily def Psycho\+\_\+paper\+\_\+community.\+find\+\_\+interval (\begin{DoxyParamCaption}\item[{}]{x,  }\item[{}]{partition }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Description
+-----------
+find_interval at which x belongs inside partition. Returns the index i.
+
+Parameters
+------
+x: float; numerical value
+partition: array; sequence of numerical values
+Returns
+------
+i: index; index for which applies
+partition[i] < x < partition[i+1], if such an index exists.
+-1 otherwise
+TODO
+------
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespace_psycho__paper__community_a55c0842aa06303ca13fb7c4124534a18}\label{namespace_psycho__paper__community_a55c0842aa06303ca13fb7c4124534a18}} 
+\index{Psycho\+\_\+paper\+\_\+community@{Psycho\+\_\+paper\+\_\+community}!Price\+\_\+definition@{Price\+\_\+definition}}
+\index{Price\+\_\+definition@{Price\+\_\+definition}!Psycho\+\_\+paper\+\_\+community@{Psycho\+\_\+paper\+\_\+community}}
+\subsubsection{\texorpdfstring{Price\+\_\+definition()}{Price\_definition()}}
+{\footnotesize\ttfamily def Psycho\+\_\+paper\+\_\+community.\+Price\+\_\+definition (\begin{DoxyParamCaption}\item[{}]{prices,  }\item[{}]{P\+V\+\_\+penetration,  }\item[{}]{Batt\+\_\+penetration,  }\item[{}]{reso,  }\item[{}]{path,  }\item[{}]{day\+\_\+sel }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Takes the prices and PV_penetration as inputs, reads the df of generation in Munich and the PV_size_distribution,
+and RANDOMLY chooses the sizes for the X houses (RANDOMLY selected) and produces an output at 15 min resolution that can be resampled @ 1h ir resample==True
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespace_psycho__paper__community_abefde718373bb160a718d8db9cd371b8}\label{namespace_psycho__paper__community_abefde718373bb160a718d8db9cd371b8}} 
+\index{Psycho\+\_\+paper\+\_\+community@{Psycho\+\_\+paper\+\_\+community}!P\+V\+\_\+\+SC@{P\+V\+\_\+\+SC}}
+\index{P\+V\+\_\+\+SC@{P\+V\+\_\+\+SC}!Psycho\+\_\+paper\+\_\+community@{Psycho\+\_\+paper\+\_\+community}}
+\subsubsection{\texorpdfstring{P\+V\+\_\+\+S\+C()}{PV\_SC()}}
+{\footnotesize\ttfamily def Psycho\+\_\+paper\+\_\+community.\+P\+V\+\_\+\+SC (\begin{DoxyParamCaption}\item[{}]{df,  }\item[{}]{Batt,  }\item[{}]{Conv\+\_\+eff,  }\item[{}]{Inv\+\_\+eff,  }\item[{}]{endo }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Description
+-----------
+This function
+
+Parameters
+------
+df: DataFrame;
+Batt: Battery class; Battery characteristics
+Conv_eff: float; Converter efficiency
+Inv_eff: float; Inverter efficiency
+endo: int; Defines the last element of the index we want to simulate
+------
+df: DataFrame;
+TODO
+------
+Doc
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespace_psycho__paper__community_a3e0bea6729bebaf15916a97fbf15e5ee}\label{namespace_psycho__paper__community_a3e0bea6729bebaf15916a97fbf15e5ee}} 
+\index{Psycho\+\_\+paper\+\_\+community@{Psycho\+\_\+paper\+\_\+community}!sell\+\_\+prob@{sell\+\_\+prob}}
+\index{sell\+\_\+prob@{sell\+\_\+prob}!Psycho\+\_\+paper\+\_\+community@{Psycho\+\_\+paper\+\_\+community}}
+\subsubsection{\texorpdfstring{sell\+\_\+prob()}{sell\_prob()}}
+{\footnotesize\ttfamily def Psycho\+\_\+paper\+\_\+community.\+sell\+\_\+prob (\begin{DoxyParamCaption}\item[{}]{S\+OC,  }\item[{}]{price,  }\item[{}]{Capacity,  }\item[{}]{case,  }\item[{}]{path }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Description
+-----------
+This function returns the selling probability based on the SOC, price, capacity and case. As well as the results of the survey which are stored as .txt
+Parameters
+------
+SOC: float; Battery state of charge at time t
+price: float; Electricity price at time t
+Capacity: float; Battery capacity
+case: string; either PV or batt from where the user is willing to sale
+path: string; path where the .txt are found
+------
+out: int; Either 1 or 0 if sell or not
+TODO
+------
+\end{DoxyVerb}
+ 

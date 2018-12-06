@@ -1,7 +1,22 @@
-
-# coding: utf-8
-
-# In[154]:
+# -*- coding: utf-8 -*-
+## @namespace Post_processing
+# Created on Wed Feb 28 09:47:22 2018
+# Author
+# Alejandro Pena-Bello
+# alejandro.penabello@unige.ch
+# The script has been tested in Linux and Windows
+# INPUTS
+# ------
+# Inputs are automatically saved in the 'Output' file
+# OUTPUTS
+# ------
+# Outputs are automatically saved in the 'Output' file
+# TODO
+# ----
+# User Interface
+# Requirements
+# ------------
+# Pandas, numpy, itertools,sys,glob,multiprocessing, time
 from matplotlib.backends.backend_pdf import PdfPages
 
 import pandas as pd

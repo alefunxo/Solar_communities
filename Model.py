@@ -5,17 +5,40 @@ Translated from Matlab
 Original author: David Parra
 @autminutesor: alejandro
 """
+## @namespace Model
+# Created Wed Apr  5 11:45:55 2017
+#Original author
+# David Parra
+# translated from Matlab by:
+# Alejandro Pena-Bello
+# alejandro.penabello@unige.ch
+# Script that simulates the output of a PV panel of 235 W.
+# The script has been tested in Linux and Windows
+# INPUTS (df,phi,res,beta,gamma)
+# ------
+# df: DataFrame; includes Temperature and GHI
+# phi: float; latitude where the panel will be installed
+# res: float; temporal resolution
+# beta: float; inclination
+# gamma: float; azimuth
+# OUTPUTS
+# ------
+# W_PVpanelS: numpy array; PV panel power output
+# TODO
+# ----
+# It needs to be cleaner
+# Requirements
+# ------------
+# Pandas, numpy, itertools,sys,glob,multiprocessing, time
+
 import pandas as pd
 import sympy as sp
 import numpy as np
 import scipy.io
 from scipy import optimize
 import warnings
-warnings.filterwarnings('ignore', 'The iteration is not making good progress')
-
-
 import math
-
+warnings.filterwarnings('ignore', 'The iteration is not making good progress')
 def Ftiltedradiation(G,beta,n,gamma,minutes,phi):
 
     #Function which obtains the tilted radiation as a function of:

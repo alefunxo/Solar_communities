@@ -1,0 +1,33 @@
+\hypertarget{namespace_model}{}\section{Model Namespace Reference}
+\label{namespace_model}\index{Model@{Model}}
+
+
+Created Wed Apr 5 11\+:45\+:55 2017 Original author David Parra translated from Matlab by\+: Alejandro Pena-\/\+Bello \href{mailto:alejandro.penabello@unige.ch}{\tt alejandro.\+penabello@unige.\+ch} Script that simulates the output of a PV panel of 235 W.  
+
+
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{namespace_model_a63d96c98ca59940fe7b2f1bb6d806740}\label{namespace_model_a63d96c98ca59940fe7b2f1bb6d806740}} 
+def {\bfseries Ftiltedradiation} (G, beta, n, gamma, minutes, phi)
+\item 
+\mbox{\Hypertarget{namespace_model_a2972cae42905b8cef597674ffbef1d0b}\label{namespace_model_a2972cae42905b8cef597674ffbef1d0b}} 
+def {\bfseries F\+P\+Vpanel} (T, G\+\_\+t, minutes)
+\item 
+\mbox{\Hypertarget{namespace_model_a63225e8607ee768b45c172b4e55c6e42}\label{namespace_model_a63225e8607ee768b45c172b4e55c6e42}} 
+def \mbox{\hyperlink{namespace_model_a63225e8607ee768b45c172b4e55c6e42}{inputs}} (df, phi, res, beta, gamma)
+\begin{DoxyCompactList}\small\item\em M\+A\+IN\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Created Wed Apr 5 11\+:45\+:55 2017 Original author David Parra translated from Matlab by\+: Alejandro Pena-\/\+Bello \href{mailto:alejandro.penabello@unige.ch}{\tt alejandro.\+penabello@unige.\+ch} Script that simulates the output of a PV panel of 235 W. 
+
+The script has been tested in Linux and Windows \subsubsection*{I\+N\+P\+U\+TS (df,phi,res,beta,gamma) }
+
+df\+: Data\+Frame; includes Temperature and G\+HI phi\+: float; latitude where the panel will be installed res\+: float; temporal resolution beta\+: float; inclination gamma\+: float; azimuth \subsubsection*{O\+U\+T\+P\+U\+TS }
+
+W\+\_\+\+P\+VpanelS\+: numpy array; PV panel power output \subsubsection*{T\+O\+DO }
+
+It needs to be cleaner \subsubsection*{Requirements }
+
+Pandas, numpy, itertools,sys,glob,multiprocessing, time 

@@ -1,0 +1,142 @@
+\hypertarget{namespace_germany___p_vdistribution}{}\section{Germany\+\_\+\+P\+Vdistribution Namespace Reference}
+\label{namespace_germany___p_vdistribution}\index{Germany\+\_\+\+P\+Vdistribution@{Germany\+\_\+\+P\+Vdistribution}}
+
+
+Created on Wed Feb 28 09\+:47\+:22 2018 Author Alejandro Pena-\/\+Bello \href{mailto:alejandro.penabello@unige.ch}{\tt alejandro.\+penabello@unige.\+ch} Script developed for the project developed together with the Consumer Decision and Sustainable Behavior Lab to include the user preferences in the charging and discharging of the battery.  
+
+
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespace_germany___p_vdistribution_ac323d1a8294f56cfe777f1e54a973b8a}{P\+V\+\_\+generation}} (path)
+\item 
+def \mbox{\hyperlink{namespace_germany___p_vdistribution_acc1f617f814d8015bf82d012c33f448a}{P\+V\+\_\+output\+\_\+inclinations}} (azimuths, inclinations, df, res, phi)
+\item 
+def \mbox{\hyperlink{namespace_germany___p_vdistribution_a77ad969c1805a36ffa94e1a13d74e4a8}{Distribution}} (path)
+\item 
+def \mbox{\hyperlink{namespace_germany___p_vdistribution_aaa5507696663fbe8f180bbdb34260a25}{German\+\_\+load}} (path)
+\item 
+def \mbox{\hyperlink{namespace_germany___p_vdistribution_ad3081c58ad3af6f4cec1676bd4b5f585}{P\+V\+\_\+gen\+\_\+munich}} (path)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Created on Wed Feb 28 09\+:47\+:22 2018 Author Alejandro Pena-\/\+Bello \href{mailto:alejandro.penabello@unige.ch}{\tt alejandro.\+penabello@unige.\+ch} Script developed for the project developed together with the Consumer Decision and Sustainable Behavior Lab to include the user preferences in the charging and discharging of the battery. 
+
+The script has been tested in Linux and Windows This script includes five functions \subsubsection*{T\+O\+DO }
+
+User Interface \subsubsection*{Requirements }
+
+Pandas, numpy, itertools,sys,glob,multiprocessing, time 
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{namespace_germany___p_vdistribution_a77ad969c1805a36ffa94e1a13d74e4a8}\label{namespace_germany___p_vdistribution_a77ad969c1805a36ffa94e1a13d74e4a8}} 
+\index{Germany\+\_\+\+P\+Vdistribution@{Germany\+\_\+\+P\+Vdistribution}!Distribution@{Distribution}}
+\index{Distribution@{Distribution}!Germany\+\_\+\+P\+Vdistribution@{Germany\+\_\+\+P\+Vdistribution}}
+\subsubsection{\texorpdfstring{Distribution()}{Distribution()}}
+{\footnotesize\ttfamily def Germany\+\_\+\+P\+Vdistribution.\+Distribution (\begin{DoxyParamCaption}\item[{}]{path }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Description
+-----------
+This function gets the distribution of PV size from Germany for sizes smaller than 10kW. The PV size distribution is saved in the Input folder under the name PV_size_distribution.csv
+
+
+Parameters
+----------
+path : string ; Is the path where all the input data is stored.
+
+Returns
+------
+
+TODO
+------
+Do it more general and for other countries\end{DoxyVerb}
+ \mbox{\Hypertarget{namespace_germany___p_vdistribution_aaa5507696663fbe8f180bbdb34260a25}\label{namespace_germany___p_vdistribution_aaa5507696663fbe8f180bbdb34260a25}} 
+\index{Germany\+\_\+\+P\+Vdistribution@{Germany\+\_\+\+P\+Vdistribution}!German\+\_\+load@{German\+\_\+load}}
+\index{German\+\_\+load@{German\+\_\+load}!Germany\+\_\+\+P\+Vdistribution@{Germany\+\_\+\+P\+Vdistribution}}
+\subsubsection{\texorpdfstring{German\+\_\+load()}{German\_load()}}
+{\footnotesize\ttfamily def Germany\+\_\+\+P\+Vdistribution.\+German\+\_\+load (\begin{DoxyParamCaption}\item[{}]{path }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Description
+-----------
+This function gets the yearly and daily average of the german load from DE_load_15_min_Power and put it in a folder called Input as csv. For this it reads a the file from DE_load_15_min_Power.csv which comes from the paper Representative electrical load profiles of residential buildings in Germany with an original temporal resolution of one second Tjaden et al. reshaped to 15 minutes resolution. German demand curves (2010)
+
+Parameters
+----------
+path : string ; Is the path where all the input data is stored.
+
+Returns
+------
+
+TODO
+------
+Do it more general and for other countries
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespace_germany___p_vdistribution_ad3081c58ad3af6f4cec1676bd4b5f585}\label{namespace_germany___p_vdistribution_ad3081c58ad3af6f4cec1676bd4b5f585}} 
+\index{Germany\+\_\+\+P\+Vdistribution@{Germany\+\_\+\+P\+Vdistribution}!P\+V\+\_\+gen\+\_\+munich@{P\+V\+\_\+gen\+\_\+munich}}
+\index{P\+V\+\_\+gen\+\_\+munich@{P\+V\+\_\+gen\+\_\+munich}!Germany\+\_\+\+P\+Vdistribution@{Germany\+\_\+\+P\+Vdistribution}}
+\subsubsection{\texorpdfstring{P\+V\+\_\+gen\+\_\+munich()}{PV\_gen\_munich()}}
+{\footnotesize\ttfamily def Germany\+\_\+\+P\+Vdistribution.\+P\+V\+\_\+gen\+\_\+munich (\begin{DoxyParamCaption}\item[{}]{path }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Description
+-----------
+This function reads the outputs in PV Gen and put them together in a df (normalized @ 1kW) delivered in a csv in the Input folder, called DE_gen_15_min_Energy.csv
+
+Parameters
+----------
+path : string ; Is the path where all the input data is stored.
+
+Returns
+------
+
+TODO
+------
+Do it more general and for other countries
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespace_germany___p_vdistribution_ac323d1a8294f56cfe777f1e54a973b8a}\label{namespace_germany___p_vdistribution_ac323d1a8294f56cfe777f1e54a973b8a}} 
+\index{Germany\+\_\+\+P\+Vdistribution@{Germany\+\_\+\+P\+Vdistribution}!P\+V\+\_\+generation@{P\+V\+\_\+generation}}
+\index{P\+V\+\_\+generation@{P\+V\+\_\+generation}!Germany\+\_\+\+P\+Vdistribution@{Germany\+\_\+\+P\+Vdistribution}}
+\subsubsection{\texorpdfstring{P\+V\+\_\+generation()}{PV\_generation()}}
+{\footnotesize\ttfamily def Germany\+\_\+\+P\+Vdistribution.\+P\+V\+\_\+generation (\begin{DoxyParamCaption}\item[{}]{path }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Description
+-----------
+This function get input data from Input_data_PV3.csv and fill missing data if needed and filter for 2015.
+
+Parameters
+----------
+path : string ; Is the path where all the input data will be stored.
+
+Returns
+------
+df: DataFrame; Dataframe includes temperature and GHI with timestamp
+
+TODO
+------
+Do it more general
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespace_germany___p_vdistribution_acc1f617f814d8015bf82d012c33f448a}\label{namespace_germany___p_vdistribution_acc1f617f814d8015bf82d012c33f448a}} 
+\index{Germany\+\_\+\+P\+Vdistribution@{Germany\+\_\+\+P\+Vdistribution}!P\+V\+\_\+output\+\_\+inclinations@{P\+V\+\_\+output\+\_\+inclinations}}
+\index{P\+V\+\_\+output\+\_\+inclinations@{P\+V\+\_\+output\+\_\+inclinations}!Germany\+\_\+\+P\+Vdistribution@{Germany\+\_\+\+P\+Vdistribution}}
+\subsubsection{\texorpdfstring{P\+V\+\_\+output\+\_\+inclinations()}{PV\_output\_inclinations()}}
+{\footnotesize\ttfamily def Germany\+\_\+\+P\+Vdistribution.\+P\+V\+\_\+output\+\_\+inclinations (\begin{DoxyParamCaption}\item[{}]{azimuths,  }\item[{}]{inclinations,  }\item[{}]{df,  }\item[{}]{res,  }\item[{}]{phi }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Description
+-----------
+This function will generate PV outputs for different azimuths and inclinations taking into account the inputs. df must contain a column called GHI and one Temperature it will put all the outputs in a csv file located in a folder called PV_Gen. The name follows this nomenclature: PV_Generation_Gamma_Beta.csv where beta is inclination and gamma is azimuth
+
+Parameters
+----------
+df: DataFrame; includes Temperature and GHI
+phi: float; latitude where the panel will be installed
+res: float; temporal resolution
+inclinations: numpy array; inclination
+azimuths: numpy array; azimuth
+
+Returns
+------
+
+TODO
+------
+\end{DoxyVerb}
+ 

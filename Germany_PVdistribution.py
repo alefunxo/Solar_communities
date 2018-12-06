@@ -1,29 +1,46 @@
-
-# coding: utf-8
-
-# # Psycho paper
-
-# In[1]:
-
+# -*- coding: utf-8 -*-
+## @namespace Germany_PVdistribution
+# Created on Wed Feb 28 09:47:22 2018
+# Author
+# Alejandro Pena-Bello
+# alejandro.penabello@unige.ch
+# Script developed for the project developed together with the Consumer Decision and Sustainable Behavior Lab to include the user preferences in the charging and discharging of the battery.
+# The script has been tested in Linux and Windows
+# This script includes five functions
+# TODO
+# ----
+# User Interface
+# Requirements
+# ------------
+# Pandas, numpy, itertools,sys,glob,multiprocessing, time
 import pandas as pd
 import matplotlib.pyplot as plt
-
 import Model as M
 import numpy as np
 import os
 import sys
 
-# ## Skip up to German demand curves (GHI, T, PV Gen and load need to be run only once)
-
-# # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 # ## Munich GHI and Temperature 2015
 # source: soda-pro.com
-# ACHTUNG! GHI is in Wh/m2 we need it in W/m2
 
-# In[3]:
 def PV_generation(path):
+    '''
+    Description
+    -----------
+    This function get input data from Input_data_PV3.csv and fill missing data if needed and filter for 2015.
 
+    Parameters
+    ----------
+    path : string ; Is the path where all the input data will be stored.
+
+    Returns
+    ------
+    df: DataFrame; Dataframe includes temperature and GHI with timestamp
+
+    TODO
+    ------
+    Do it more general
+    '''
     print('##############################')
     print('PV_Gen')
     df=pd.read_csv(path+'Input/Input_data_PV3.csv',
@@ -31,10 +48,6 @@ def PV_generation(path):
 
     df.index = df.index.tz_localize('UTC').tz_convert('CET')
 
-    #print(df.keys())
-    #df=pd.read_csv('Input/Input_data_PV2.csv',
-    #                 encoding='utf8', sep=',',engine='python',index_col=12,
-    #                parse_dates=[12],infer_datetime_format=True )
     df=df[df.index.year==2015]
     df.GHI=df.GHI/.25
 
@@ -70,13 +83,27 @@ def PV_generation(path):
         test_long.index=df.index
         df['GHI']=test_long['aux']
     return (df)
-#azimuths=[-50,-40,40,50]
-#inclinations=[20,25,30,35,40,45]
-#phi=48.1351 #Munich
+
 def PV_output_inclinations(azimuths,inclinations,df,res,phi):
-    '''Will generate PV outputs for different azimuths and inclinations taking into account the inputs
-    df must contain a column called GHI and one Temperature
-    it will put all the outputs in a csv file located in a folder called PV_Gen'''
+    '''
+    Description
+    -----------
+    This function will generate PV outputs for different azimuths and inclinations taking into account the inputs. df must contain a column called GHI and one Temperature it will put all the outputs in a csv file located in a folder called PV_Gen. The name follows this nomenclature: PV_Generation_Gamma_Beta.csv where beta is inclination and gamma is azimuth
+
+    Parameters
+    ----------
+    df: DataFrame; includes Temperature and GHI
+    phi: float; latitude where the panel will be installed
+    res: float; temporal resolution
+    inclinations: numpy array; inclination
+    azimuths: numpy array; azimuth
+
+    Returns
+    ------
+
+    TODO
+    ------
+    '''
     print('##############################')
     print('PV_output_inclinations')
     i=0
@@ -92,7 +119,24 @@ def PV_output_inclinations(azimuths,inclinations,df,res,phi):
             i+=1
     return
 def Distribution(path):
-    '''Get the distribution of PV size from Germany for sizes smaller than 10kW'''
+    '''
+    Description
+    -----------
+    This function gets the distribution of PV size from Germany for sizes smaller than 10kW. The PV size distribution is saved in the Input folder under the name PV_size_distribution.csv
+
+
+    Parameters
+    ----------
+    path : string ; Is the path where all the input data is stored.
+
+    Returns
+    ------
+
+    TODO
+    ------
+    Do it more general and for other countries
+
+    '''
     print('##############################')
     print('Distribution')
     df=pd.read_csv(path+'Input/105_devices_utf8.csv', encoding='utf8', sep=';',engine='python',header=3)
@@ -108,17 +152,24 @@ def Distribution(path):
     res_sol.to_csv(path+'Input/PV_size_distribution.csv')
     return()
 
-# # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-# # From here can be run again
-
-# ## German demand curves (2010)
-# see Representative electrical load profiles of residential buildings in Germany with an original temporal resolution of one second Tjaden et al. reshaped to 15 minutes resolution
-
-# In[2]:
 def German_load(path):
 
-    '''Get the yearly and daily average of the german load from DE_load_15_min_Power and put it in a folder called Input as csv'''
+    '''
+    Description
+    -----------
+    This function gets the yearly and daily average of the german load from DE_load_15_min_Power and put it in a folder called Input as csv. For this it reads a the file from DE_load_15_min_Power.csv which comes from the paper Representative electrical load profiles of residential buildings in Germany with an original temporal resolution of one second Tjaden et al. reshaped to 15 minutes resolution. German demand curves (2010)
+
+    Parameters
+    ----------
+    path : string ; Is the path where all the input data is stored.
+
+    Returns
+    ------
+
+    TODO
+    ------
+    Do it more general and for other countries
+    '''
     print('##############################')
     print('German_load')
 
@@ -131,9 +182,23 @@ def German_load(path):
     b.to_csv(path+'Input/German_daily_average_load_curve_kWh.csv')
     return()
 
-    # ## PV generation Munich
 def PV_gen_munich(path):
-    '''read the outputs in PV Gen and put them together in a df (normalized @ 1kW) delivered in a csv in the Input folder, called DE_gen_15_min_Energy.csv'''
+    '''
+    Description
+    -----------
+    This function reads the outputs in PV Gen and put them together in a df (normalized @ 1kW) delivered in a csv in the Input folder, called DE_gen_15_min_Energy.csv
+
+    Parameters
+    ----------
+    path : string ; Is the path where all the input data is stored.
+
+    Returns
+    ------
+
+    TODO
+    ------
+    Do it more general and for other countries
+    '''
     print('##############################')
     print('PV_gen_munich')
     path2=path+'PV_gen/'

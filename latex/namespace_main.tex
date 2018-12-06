@@ -1,0 +1,76 @@
+\hypertarget{namespace_main}{}\section{Main Namespace Reference}
+\label{namespace_main}\index{Main@{Main}}
+
+
+Created on Wed Feb 28 09\+:47\+:22 2018 Author Alejandro Pena-\/\+Bello \href{mailto:alejandro.penabello@unige.ch}{\tt alejandro.\+penabello@unige.\+ch} \mbox{\hyperlink{namespace_main}{Main}} script developed for the project developed together with the Consumer Decision and Sustainable Behavior Lab to include the user preferences in the charging and discharging of the battery.  
+
+
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{namespace_main_add8b130225fb655f75f69fb058476c6d}\label{namespace_main_add8b130225fb655f75f69fb058476c6d}} 
+def {\bfseries fn\+\_\+timer} (function)
+\item 
+def \mbox{\hyperlink{namespace_main_abdb739977f22445f24edb008e9598bac}{set\+\_\+distributions}} (path)
+\item 
+def \mbox{\hyperlink{namespace_main_ad808d947fc74de474e04b89fd9431ec8}{main}} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Created on Wed Feb 28 09\+:47\+:22 2018 Author Alejandro Pena-\/\+Bello \href{mailto:alejandro.penabello@unige.ch}{\tt alejandro.\+penabello@unige.\+ch} \mbox{\hyperlink{namespace_main}{Main}} script developed for the project developed together with the Consumer Decision and Sustainable Behavior Lab to include the user preferences in the charging and discharging of the battery. 
+
+We use a deterministic approach and include probabilities to discharge the battery to the grid in the frame of a community with P2P energy trading. The script has been tested in Linux and Windows \subsubsection*{I\+N\+P\+U\+TS }
+
+Inputs are automatically saved in the \textquotesingle{}Input\textquotesingle{} file \subsubsection*{O\+U\+T\+P\+U\+TS }
+
+Outputs are automatically saved in the \textquotesingle{}Output\textquotesingle{} file \subsubsection*{T\+O\+DO }
+
+User Interface \subsubsection*{Requirements }
+
+Pandas, numpy, itertools,sys,glob,multiprocessing, time 
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{namespace_main_ad808d947fc74de474e04b89fd9431ec8}\label{namespace_main_ad808d947fc74de474e04b89fd9431ec8}} 
+\index{Main@{Main}!main@{main}}
+\index{main@{main}!Main@{Main}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily def Main.\+main (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Description
+-----------
+This function handle the deterministic model. It can be use in three modes, choice=True will allow to choice the PV and Battery penetration of the community. If choice=False the script will be run for different PV penetrations and Battery penetrations (predefined, PV_array and Batt_array). pp_only=True will only use predefined outputs (included already in the Output folder) and plot the results in a pdfself. If print_=False the script will not save the outputs in a pdf.
+
+Parameters
+----------
+choice: Boolean ; Allows to run for different PV penetrations and Battery penetration or for a predefined set.
+pp_only: Boolean ; Use predefined outputs (included already in the Output folder) and plot the results in a pdfself
+print_: Boolean ; If true the script will save the outputs in a pdf.
+
+Returns
+------
+Nothing. The results are stored in the folder 'Outputs'
+
+TODO
+------
+Do it interactive with the user in order to avoid manual changes when some functions are not needed
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespace_main_abdb739977f22445f24edb008e9598bac}\label{namespace_main_abdb739977f22445f24edb008e9598bac}} 
+\index{Main@{Main}!set\+\_\+distributions@{set\+\_\+distributions}}
+\index{set\+\_\+distributions@{set\+\_\+distributions}!Main@{Main}}
+\subsubsection{\texorpdfstring{set\+\_\+distributions()}{set\_distributions()}}
+{\footnotesize\ttfamily def Main.\+set\+\_\+distributions (\begin{DoxyParamCaption}\item[{}]{path }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Description
+-----------
+Calls functions from the Germany_PVdistribution module
+PV_generation, defines the azimuths, inclinations and latitude to be simulated using PV_output_inclinations. Calls the following functions: Distribution, German_load and PV_gen_munich. Only the last one is necessary in order to simulate the correct amount of PV penetration. The other functions must be called only the first time the script is used in order to create the input data (PV for different inclinations, the PV distribution and the load).
+
+Returns
+------
+
+TODO
+------
+Do it interactive with the user in order to avoid manual changes when some functions are not needed
+\end{DoxyVerb}
+ 
