@@ -98,7 +98,7 @@ def main():
     print('Welcome')
     choice=True
     print_=True
-    pp_only=True
+    pp_only=False
     if pp_only==False:
         #set_distributions(path)
         if choice:
@@ -110,7 +110,7 @@ def main():
                 'Batt_penetration', choices=range(0,101),type=int,
                 help='Choice Battery penetration (among houses with PV) between 0 and 100%')
             args=parser.parse_args()
-            day_sel='test'
+            day_sel='winter'
             print(args)
             print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
             print('PV and battery penetration selected')

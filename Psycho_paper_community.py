@@ -71,12 +71,12 @@ def sell_prob(SOC,price,Capacity,case,path):
     '''
     #define the matrix of probs
     if case=='PV':
-        #prob_mat=pd.read_table(path+'Input/P_selling_by_price_and_autarky2.txt',sep='\t',index_col=[0])
-        prob_mat=pd.read_table(path+'Input/surplus_cluster1_p_selling.txt',sep='\t',index_col=[0])
+        prob_mat=pd.read_table(path+'Input/P_selling_by_price_and_autarky2.txt',sep='\t',index_col=[0])
+        #prob_mat=pd.read_table(path+'Input/surplus_cluster1_p_selling.txt',sep='\t',index_col=[0])
         #prob_mat=pd.read_table(path+'Input/surplus_cluster2_p_selling.txt',sep='\t',index_col=[0])
     else:#when selling from battery
-        #prob_mat=pd.read_table(path+'Input/P_selling_by_price_and_autarky_2.txt',sep='\t',index_col=[0])
-        prob_mat=pd.read_table(path+'Input/nosurplus_cluster1_p_selling.txt',sep='\t',index_col=[0])
+        prob_mat=pd.read_table(path+'Input/P_selling_by_price_and_autarky_2.txt',sep='\t',index_col=[0])
+        #prob_mat=pd.read_table(path+'Input/nosurplus_cluster1_p_selling.txt',sep='\t',index_col=[0])
         #prob_mat=pd.read_table(path+'Input/nosurplus_cluster2_p_selling.txt',sep='\t',index_col=[0])
     if SOC==0:
         out=0
@@ -318,8 +318,7 @@ def Price_definition(prices, PV_penetration,Batt_penetration,reso,path,day_sel):
     '''
     print('################################################')
     print('Getting prices')
-    df_gen_comb=pd.read_csv(path+'Input/DE_gen_15_min_Energy.csv', encoding='utf8', sep=',',engine='python',parse_dates=[0],
-                   infer_datetime_format=True,index_col=0)
+    df_gen_comb=pd.read_csv(path+'Input/DE_gen_15_min_Energy.csv', encoding='utf8', sep=',',engine='python',parse_dates=[0],                   infer_datetime_format=True,index_col=0)
     df_gen_comb.index = df_gen_comb.index.tz_localize('UTC').tz_convert('CET')
     if reso=='1h':
         df_demand=pd.read_csv(path+'Input/DE_load_15_min_Power.csv', encoding='utf8', sep=',',
@@ -367,10 +366,13 @@ def Price_definition(prices, PV_penetration,Batt_penetration,reso,path,day_sel):
     sizes=np.random.choice(np.arange(1, 11),int(np.floor(PV_penetration*74)), p=prob_size)
     if day_sel in ['winter','summer','test']:
         sizes=[3,3,9,10,9,6,4,10,3,7,5,10,6,4,10,10,5,9]
-    # Select the PV profiles randomly and include the size in the name of the columns
+        selection_batt=['PV_-50_35','PV_-10_20','PV_30_40','PV_50_35','PV_40_40','PV_-40_45','PV_10_45','PV_-50_30','PV_-30_35','PV_10_20','PV_20_30','PV_-50_45','PV_30_25','PV_10_40','PV_-50_30','PV_-50_25','PV_50_35','PV_10_25']
+  # Select the PV profiles randomly and include the size in the name of the columns
     newcols=[]
     #We select from all the combinations of azimuth and inclination randomly
+
     selection=np.random.choice(df_gen_comb.columns,len(selection_PV)-len(selection_batt))
+
     j=0
     k=0
     m=0
@@ -432,7 +434,14 @@ def Price_definition(prices, PV_penetration,Batt_penetration,reso,path,day_sel):
     Prices.step=Prices.step.replace(to_replace=0, method='ffill')
     for i in range(len(prices)):
         Prices.loc[aux>=Prices.step*i,'prices']=prices[i]
+        Prices.loc[aux>=(Prices.step*(prices.size+1)*(3**i-3))/(3**(i)),'prices']=prices[i]
+    print(Prices)
+    for i in range(len(prices)):
+        Prices.loc[aux>=Prices.step*i,'prices']=prices[i]
+    #print(Prices)
     Prices=Prices.drop(columns=['step'])
+
+    print(argsdsaf)
     if reso=='1h':
         df_sel.to_csv(path+'Input/DE_gen_1_h_Energy_sizes_{}.csv'.format(PV_penetration))
         Prices.to_csv(path+'Input/DE_price_1_h_{}.csv'.format(PV_penetration))

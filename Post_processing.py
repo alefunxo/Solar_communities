@@ -113,8 +113,7 @@ def community_ind(aux_no_comm,aux_comm):
     return[data_no_comm,data_comm]
 def graph_prices(df,pdf):
     fig, axs = plt.subplots(1,1,figsize=(10, 10))#, subplot_kw=dict(aspect="equal"))
-    print(df.head())
-    print(df.keys())
+
     df[df.df==0].prices.plot()
     #plt.tight_layout()
     pdf.savefig()
@@ -229,9 +228,7 @@ def graph_average(aux_no_comm,aux_comm,pdf):
     plt.ylabel('kWh',size=18)
     plt.legend(loc=2)
     plt.figure(figsize=(10,10))
-    print(aux_comm_mean.SOC.max())
-    print(aux_comm_mean.SOC[0])
-    print(';$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
+
     (aux_comm_mean.SOC).plot()
     (aux_no_comm_mean.SOC).plot(label='No behaviour')
 
@@ -260,8 +257,7 @@ def Post_processing(Batt_penetration,PV_penetration,print_,path):
 
     df_no_comm['bill']=df_no_comm.prices*df_no_comm.grid_load-df_no_comm.PV_grid*df_no_comm.prices
     df_comm['bill']=df_comm.prices*df_comm.comm_load-(df_comm.PV_comm+df_comm.Batt_comm)*df_comm.prices
-    print(df_comm.head())
-    print(df_no_comm.head())
+
 
     # We can calculate the import and export to the grid. First we sum every profile in the "microgrid" to get the totals.
 
@@ -286,6 +282,7 @@ def Post_processing(Batt_penetration,PV_penetration,print_,path):
     print((aux_comm.gen-aux_comm.PV_batt-aux_comm.PV_load-aux_comm.PV_comm-aux_comm.PV_losses).sum())
     print('Battery Balance:')
     print((aux_comm.PV_batt-aux_comm.Batt_load-aux_comm.Batt_comm-aux_comm.Batt_losses).sum())
+    print(aux_comm.tail())
     print('Community Balance:')
     print(((aux_comm.Batt_comm+aux_comm.PV_comm)-aux_comm.comm_demand-aux_comm.comm_grid).sum())
 
@@ -313,7 +310,7 @@ def Post_processing(Batt_penetration,PV_penetration,print_,path):
         file=path+'Output/Output_{}_{}_train.pdf'.format(PV_penetration*100,Batt_penetration*100)
         print(file)
         with  PdfPages(file) as pdf:
-            print('pdf')
+            
             graphs_gral(aux_comm,pdf)
             graph_average(aux_no_comm,aux_comm,pdf)
             graph_autarky(aux_no_comm,aux_comm,pdf)
