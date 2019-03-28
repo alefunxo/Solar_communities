@@ -74,8 +74,8 @@ def func(pct, allvals):
     return "{:.1f}%".format(pct, absolute)
 def graphs_gral(aux_comm,pdf):
     plt.figure(figsize=(10,10))
-    aux_comm.gen.plot()
-    aux_comm.demand.plot()
+    aux_comm.gen.plot(label='Community generation')
+    aux_comm.demand.plot(label='Community demand')
     plt.xlabel('Time',size=18)
     plt.ylabel('kWh',size=18)
     plt.legend()
@@ -112,9 +112,11 @@ def community_ind(aux_no_comm,aux_comm):
 
     return[data_no_comm,data_comm]
 def graph_prices(df,pdf):
-    fig, axs = plt.subplots(1,1,figsize=(10, 10))#, subplot_kw=dict(aspect="equal"))
-
-    df[df.df==0].prices.plot()
+    plt.subplots(1,1,figsize=(10, 10))#, subplot_kw=dict(aspect="equal"))
+    axes=df.groupby(df.loc[:,'date'].dt.hour).prices.mean().plot()
+    axes.set_xlabel('Hour of the day')
+    plt.suptitle('Mean prices throughout the year')
+    #df[df.df==0].prices.plot()
     #plt.tight_layout()
     pdf.savefig()
     return
@@ -132,7 +134,7 @@ def graph_autarky(aux_no_comm,aux_comm,pdf):
     data = [grid,self_PV]
     data2 = [grid_comm,self_PV_comm]
     data3 = [grid_nb,self_PV_nb]
-    labels = ['Import','Local']
+    labels = ['Electricity imported from the grid','Electricity from the community']
 
     wedges, texts, autotexts = axs[0].pie(data, autopct=lambda pct: func(pct, data),
                                       textprops=dict(color="w"))
@@ -161,21 +163,21 @@ def graph_sc(data,data2,pdf):
 
     fig, axs = plt.subplots(1,2,figsize=(10, 10), subplot_kw=dict(aspect="equal"))
 
-    labels = ['Direct SC','Battery discharge','community consumed','exported to grid','Total_losses']
+    labels = ['Direct SC','Battery discharge','Consumed inside the community','Exported to grid','Total_losses']
 
 
-    wedges, texts, autotexts = axs[0].pie(data, autopct=lambda pct: func(pct, data),
+    wedges, texts, autotexts = axs[1].pie(data, autopct=lambda pct: func(pct, data),
                                       textprops=dict(color="w"))
-    axs[1].legend(wedges, labels,
+    axs[0].legend(wedges, labels,
               title="Self-Consumption",
               loc="center right",
               bbox_to_anchor=(.5, -.7, 0.5, 1))
     plt.setp(autotexts, size=14, weight="bold")
-    wedges, texts, autotexts = axs[1].pie(data2, autopct=lambda pct: func(pct, data),
+    wedges, texts, autotexts = axs[0].pie(data2, autopct=lambda pct: func(pct, data),
                                       textprops=dict(color="w"))
-    axs[0].set_title("Self-consumption community\n no user behaviour",size=18)
+    axs[1].set_title("Self-consumption community\n no user behaviour",size=18)
 
-    axs[1].set_title("Self-consumption community\nwith user behaviour",size=18)
+    axs[0].set_title("Self-consumption community\nwith user behaviour",size=18)
     plt.setp(autotexts, size=14, weight="bold")
     plt.tight_layout()
     pdf.savefig()
@@ -193,35 +195,37 @@ def graph_average(aux_no_comm,aux_comm,pdf):
     aux_comm_mean=aux_comm.groupby(aux_comm.index.hour).mean()
     aux_no_comm_mean=aux_no_comm.groupby(aux_no_comm.index.hour).mean()
     plt.figure(figsize=(10,10))
-    (aux_comm_mean.gen).plot(label='gen')
-    (aux_comm_mean.demand).plot(label='demand')
-    (aux_comm_mean.comm_demand).plot(label='community to demand')
-    (aux_comm_mean.comm_grid).plot(label='export community to grid')
-    (aux_comm_mean.grid_demand).plot(label='grid to community (new demand)')
+    (aux_comm_mean.gen).plot(label='Community generation')
+    (aux_comm_mean.demand).plot(label='Original community demand')
+    
+    (aux_comm_mean.comm_demand).plot(label='Exported from the community to \n cover community demand')
+    (aux_comm_mean.comm_grid).plot(label='Exported from the community \n to the grid')
+    (aux_comm_mean.grid_demand).plot(label='Imported from the grid \n to the community (new demand)')
     #(aux_no_comm_mean.grid_demand).plot(label='grid to community no user ')
-    plt.ylim(-1,100)
+    #plt.ylim(-1,100)
     plt.title('',size=18)
     plt.xlabel('Time',size=18)
     plt.ylabel('kWh',size=18)
     plt.legend(loc=2)
+    plt.title('Average values per year')
     plt.tight_layout()
     pdf.savefig()
     plt.figure(figsize=(10,10))
-    (aux_comm_mean.demand).plot(label='demand')
-    (aux_comm_mean.grid_demand).plot(label='grid to community')
-    (aux_no_comm_mean.grid_demand).plot(label='grid to community no user ')
+    (aux_comm_mean.demand).plot(label='Original community demand')
+    (aux_comm_mean.grid_demand).plot(label='Imported from the grid \n to the community (new demand)')
+    (aux_no_comm_mean.grid_demand).plot(label='Imported from the grid \n to the community (new demand) \n without user behaviour')
     (aux_comm_mean.grid_demand*0).plot(label='zero')
     #plt.title('Comparison SOC between community with and w/o user behaviour.',size=18)
-    plt.ylim(-1,100)
+    #plt.ylim(-1,100)
     plt.xlabel('Time',size=18)
     plt.ylabel('kWh',size=18)
     plt.tight_layout()
     plt.legend(loc=2)
     pdf.savefig()
     plt.figure(figsize=(10,10))
-    (aux_comm_mean.gen).plot(label='gen')
-    (aux_comm_mean.comm_grid).plot(label='community to grid')
-    (aux_no_comm_mean.comm_grid).plot(label='community to grid no user ')
+    (aux_comm_mean.gen).plot(label='Community generation')
+    (aux_comm_mean.comm_grid).plot(label='Exported from the community to the grid')
+    (aux_no_comm_mean.comm_grid).plot(label='Exported from \n the community to the grid \n without user behaviour')
     (aux_comm_mean.grid_demand*0).plot(label='zero')
     plt.title('Comparison SOC between community with and w/o user behaviour.',size=18)
     plt.xlabel('Time',size=18)
@@ -229,8 +233,8 @@ def graph_average(aux_no_comm,aux_comm,pdf):
     plt.legend(loc=2)
     plt.figure(figsize=(10,10))
 
-    (aux_comm_mean.SOC).plot()
-    (aux_no_comm_mean.SOC).plot(label='No behaviour')
+    (aux_comm_mean.SOC).plot(label='SOC with behaviour')
+    (aux_no_comm_mean.SOC).plot(label='SOC without behaviour')
 
     plt.title('Comparison SOC between community with and w/o user behaviour.',size=18)
     #(aux_comm_mean.grid_demand*0).plot(label='zero')
@@ -241,24 +245,22 @@ def graph_average(aux_no_comm,aux_comm,pdf):
     return
 
 
-def Post_processing(Batt_penetration,PV_penetration,print_,path):
+def Post_processing(Batt_penetration,PV_penetration,print_,path,probs_applied):
 
-    df_no_comm=pd.read_csv(path+'Output/no_community_{}_{}.csv'.format(PV_penetration,Batt_penetration),encoding='utf8', sep=',',header=0,
-    engine='python',index_col=0, parse_dates=[1],infer_datetime_format=True,
+    df_no_comm=pd.read_csv(path+'Output/no_community_{}_{}_{}.csv'.format(PV_penetration,Batt_penetration,probs_applied),encoding='utf8', sep=',',header=0,
+        engine='python',date_parser=lambda col: pd.to_datetime(col, utc=True), parse_dates=[1],infer_datetime_format=True,index_col=0,
     names=['index','date','demand','gen','SOC','PV_batt', 'PV_load', 'PV_grid', 'E_dis','Batt_load','Batt_grid','grid_load','PV_losses','Batt_losses','flag','type','df','prices'])
+    df_no_comm.loc[:,'date'] =pd.DatetimeIndex(df_no_comm.loc[:,'date']).tz_convert('CET')
+    #df_no_comm.loc[:,'date'].dt.hour
 
-    df_no_comm.loc[:,'date'] =pd.DatetimeIndex( df_no_comm.loc[:,'date']).tz_localize('UTC').tz_convert('CET')
+    df_comm=pd.read_csv(path+'Output/community_{}_{}_{}.csv'.format(PV_penetration,Batt_penetration,probs_applied),encoding='utf8', sep=',',header=0,
+        engine='python',date_parser=lambda col: pd.to_datetime(col, utc=True), parse_dates=[1],infer_datetime_format=True,index_col=0,
+                        names=['index','date','demand','gen','SOC','PV_batt', 'PV_load', 'PV_comm', 'E_dis','Batt_load','Batt_comm','comm_load','PV_losses','Batt_losses','flag','type','df','prices'])
 
-
-    df_comm=pd.read_csv(path+'Output/community_{}_{}.csv'.format(PV_penetration,Batt_penetration),encoding='utf8', sep=',',
-                        engine='python',index_col=0,header=0, parse_dates=[1],infer_datetime_format=True,names=['index','date','demand','gen','SOC','PV_batt', 'PV_load', 'PV_comm', 'E_dis','Batt_load','Batt_comm','comm_load','PV_losses','Batt_losses','flag','type','df','prices'])
-
-    df_comm.loc[:,'date'] =pd.DatetimeIndex( df_comm.loc[:,'date']).tz_localize('UTC').tz_convert('CET')
+    df_comm.loc[:,'date'] =pd.DatetimeIndex(df_comm.loc[:,'date']).tz_convert('CET')
 
     df_no_comm['bill']=df_no_comm.prices*df_no_comm.grid_load-df_no_comm.PV_grid*df_no_comm.prices
     df_comm['bill']=df_comm.prices*df_comm.comm_load-(df_comm.PV_comm+df_comm.Batt_comm)*df_comm.prices
-
-
     # We can calculate the import and export to the grid. First we sum every profile in the "microgrid" to get the totals.
 
     aux_comm=df_comm.groupby(df_comm.date).sum()
@@ -307,7 +309,7 @@ def Post_processing(Batt_penetration,PV_penetration,print_,path):
 
     [data_no_comm,data_comm]=community_ind(aux_no_comm,aux_comm)
     if print_:
-        file=path+'Output/Output_{}_{}_train.pdf'.format(PV_penetration*100,Batt_penetration*100)
+        file=path+'Output/Output_{}_{}_{}_train.pdf'.format(PV_penetration*100,Batt_penetration*100,probs_applied)
         print(file)
         with  PdfPages(file) as pdf:
             
@@ -316,12 +318,22 @@ def Post_processing(Batt_penetration,PV_penetration,print_,path):
             graph_autarky(aux_no_comm,aux_comm,pdf)
             graph_sc(data_no_comm,data_comm,pdf)
             graph_prices(df_comm,pdf)
-            plt.figure(figsize=(10,10))
             df.columns=['types','bill_comm','bill']
 
-            df.reset_index().boxplot(column='bill_comm', by='types')
-            pdf.savefig()
             plt.figure(figsize=(10,10))
-            df.reset_index().boxplot(column='bill', by='types')
+            labels = ['No PV No Battery','PV Only','PV and Battery']
+            axes=df.reset_index().boxplot(column='bill_comm', by='types')
+            axes.set_xticklabels(labels)
+            
+            plt.title('With community')
+            pdf.savefig()
+            
+            plt.figure(figsize=(10,10))
+            labels = ['No PV No Battery','PV Only','PV and Battery']
+            axes=df.reset_index().boxplot(column='bill', by='types')
+            axes.set_xticklabels(labels)
+            plt.suptitle('Without community')
+            
             pdf.savefig()
             d = pdf.infodict()
+            plt.close('all')

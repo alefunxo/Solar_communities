@@ -90,18 +90,67 @@ def main():
     ------
     Do it interactive with the user in order to avoid manual changes when some functions are not needed
     '''
-    if sys.platform=='win32':
-        path='C:/Users/alejandro/Documents/GitHub/Psycho/'
-    else:
-        path='/home/alefunxo/Documents/Psycho/'
-    print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
-    print('Welcome')
-    choice=True
-    print_=True
-    pp_only=False
-    if pp_only==False:
-        #set_distributions(path)
-        if choice:
+    for i in range(4):
+        i=i+1
+        if sys.platform=='win32':
+            path='C:/Users/alejandro/Documents/GitHub/Psycho/'
+        else:
+            path='./'
+        print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
+        print('Welcome')
+        choice=True
+        print_=True
+        pp_only=False
+        probs_applied=i# 1 for surplus only, 2 for morning+surplus 3 for morning+surplus+evening 4 for evening and surplus
+        if pp_only==False:
+            #set_distributions(path)
+            if choice:
+                parser = argparse.ArgumentParser()
+                parser.add_argument(
+                    'PV_penetration', choices=range(0,101),type=int,
+                    help='Choice PV penetration between 0 and 100%')
+                parser.add_argument(
+                    'Batt_penetration', choices=range(0,101),type=int,
+                    help='Choice Battery penetration (among houses with PV) between 0 and 100%')
+                args=parser.parse_args()
+                day_sel='other'
+                print(args)
+                print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
+                print('PV and battery penetration selected')
+                print('PV penetration: {}%'.format(args.PV_penetration))
+                print('Battery penetration: {}%'.format(args.Batt_penetration))
+                reso='1h'
+                print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
+                [Gen_balance,Batt_balance,Demand_balance]=psy_com.community_psycho(args.Batt_penetration/100,args.PV_penetration/100,reso,path,day_sel,probs_applied)
+                print('Generation Balance:')
+                print(Gen_balance)
+                print('Battery Balance:')
+                print(Batt_balance)
+                print('Demand Balance:')
+                print(Demand_balance)
+                pp.Post_processing(args.Batt_penetration/100,args.PV_penetration/100,print_,path,probs_applied)
+            else:
+                PV_array=[20,25,30,35,40,45,50]
+                Batt_array=[25,50,75,100]
+                for PV in PV_array:
+                    for Batt in Batt_array:
+                        print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
+                        print('PV and battery penetration selected')
+                        print('PV penetration: {}%'.format(PV))
+                        print('Battery penetration: {}%'.format(Batt))
+                        reso='1h'
+                        print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
+                        [Gen_balance,Batt_balance,Demand_balance]=psy_com.community_psycho(Batt/100,PV/100,reso,path,day_sel,probs_applied)
+                        print('Generation Balance:')
+                        print(Gen_balance)
+                        print('Battery Balance:')
+                        print(Batt_balance)
+                        print('Demand Balance:')
+                        print(Demand_balance)
+                        pp.Post_processing(Batt/100,PV/100,print_,path)
+            print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
+        else:
+            "Only printing results"
             parser = argparse.ArgumentParser()
             parser.add_argument(
                 'PV_penetration', choices=range(0,101),type=int,
@@ -110,7 +159,6 @@ def main():
                 'Batt_penetration', choices=range(0,101),type=int,
                 help='Choice Battery penetration (among houses with PV) between 0 and 100%')
             args=parser.parse_args()
-            day_sel='winter'
             print(args)
             print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
             print('PV and battery penetration selected')
@@ -118,51 +166,6 @@ def main():
             print('Battery penetration: {}%'.format(args.Batt_penetration))
             reso='1h'
             print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
-            [Gen_balance,Batt_balance,Demand_balance]=psy_com.community_psycho(args.Batt_penetration/100,args.PV_penetration/100,reso,path,day_sel)
-            print('Generation Balance:')
-            print(Gen_balance)
-            print('Battery Balance:')
-            print(Batt_balance)
-            print('Demand Balance:')
-            print(Demand_balance)
-            pp.Post_processing(args.Batt_penetration/100,args.PV_penetration/100,print_,path)
-        else:
-            PV_array=[20,25,30,35,40,45,50]
-            Batt_array=[25,50,75,100]
-            for PV in PV_array:
-                for Batt in Batt_array:
-                    print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
-                    print('PV and battery penetration selected')
-                    print('PV penetration: {}%'.format(PV))
-                    print('Battery penetration: {}%'.format(Batt))
-                    reso='1h'
-                    print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
-                    [Gen_balance,Batt_balance,Demand_balance]=psy_com.community_psycho(Batt/100,PV/100,reso,path,day_sel)
-                    print('Generation Balance:')
-                    print(Gen_balance)
-                    print('Battery Balance:')
-                    print(Batt_balance)
-                    print('Demand Balance:')
-                    print(Demand_balance)
-                    pp.Post_processing(Batt/100,PV/100,print_,path)
-        print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
-    else:
-        "Only printing results"
-        parser = argparse.ArgumentParser()
-        parser.add_argument(
-            'PV_penetration', choices=range(0,101),type=int,
-            help='Choice PV penetration between 0 and 100%')
-        parser.add_argument(
-            'Batt_penetration', choices=range(0,101),type=int,
-            help='Choice Battery penetration (among houses with PV) between 0 and 100%')
-        args=parser.parse_args()
-        print(args)
-        print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
-        print('PV and battery penetration selected')
-        print('PV penetration: {}%'.format(args.PV_penetration))
-        print('Battery penetration: {}%'.format(args.Batt_penetration))
-        reso='1h'
-        print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
-        pp.Post_processing(args.Batt_penetration/100,args.PV_penetration/100,print_,path)
+            pp.Post_processing(args.Batt_penetration/100,args.PV_penetration/100,print_,path,probs_applied)
 if __name__== '__main__':
     main()
