@@ -955,7 +955,7 @@ def community_psycho(Batt_penetration,PV_penetration,reso,path,day_sel,probs_app
     Inv_eff=0.95
     prices=np.array([0, 0.07,.10,.13,.16,.19,.22,.25,.28])
     prob_choice=0.5
-    kWh_dis=1
+    kWh_dis=2
     case='PV'
     Batt=pc.Battery(10,'NMC')
     inputs={'Conv_eff':Conv_eff, 'Inv_eff':Inv_eff,'prices':prices,'Batt':Batt,'PV_penetration':PV_penetration,'probs_applied':probs_applied,

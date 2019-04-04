@@ -212,6 +212,7 @@ def graph_average(aux_no_comm,aux_comm,pdf):
     pdf.savefig()
     plt.figure(figsize=(10,10))
     (aux_comm_mean.demand).plot(label='Original community demand')
+    (aux_comm_mean.demand-aux_comm_mean.grid_demand).plot(label='Original community residual demand')
     (aux_comm_mean.grid_demand).plot(label='Imported from the grid \n to the community (new demand)')
     (aux_no_comm_mean.grid_demand).plot(label='Imported from the grid \n to the community (new demand) \n without user behaviour')
     (aux_comm_mean.grid_demand*0).plot(label='zero')
