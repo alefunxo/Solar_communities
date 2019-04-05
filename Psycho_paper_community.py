@@ -702,7 +702,6 @@ def create_community(inputs):
     print('Finished')
     return inputs
 
-
 def price_probability(inputs):
     '''
     Description
@@ -727,18 +726,32 @@ def price_probability(inputs):
 
     '''
     net_demand=inputs['df_demand'].sum(axis=1)-inputs['df_generation'].sum(axis=1)
-    df_prices=np.array([])
+    prob_mat_PV=pd.read_csv(inputs['path']+'Input/P_selling_by_price_and_autarky2.txt',sep='\t',index_col=[0])
+    prob_mat_Batt=pd.read_csv(inputs['path']+'Input/P_selling_by_price_and_autarky_2.txt',sep='\t',index_col=[0])
+    if len(inputs['prob_choice'])==1:
+        q_supply_midday=int(np.floor(inputs['PV_penetration']*inputs['Batt_penetration']*inputs['df_demand'].shape[1]))*prob_mat_PV.loc[inputs['prob_choice'][0],:]*inputs['kWh_dis']
+        q_supply_other=int(np.floor(inputs['PV_penetration']*inputs['Batt_penetration']*inputs['df_demand'].shape[1]))*prob_mat_Batt.loc[inputs['prob_choice'][0],:]*inputs['kWh_dis']
+        df_prices=pd.DataFrame(index=net_demand.index)
+        df_prices.loc[:,'prices']=net_demand.apply(lambda x:inputs['prices'][find_interval_PQ(x,q_supply_midday)])
+        df_prices.loc[(df_prices.index.hour<10)|(df_prices.index.hour>17),'prices']=net_demand[(net_demand.index.hour<10)|(net_demand.index.hour>17)].apply(lambda x:inputs['prices'][find_interval_PQ(x,q_supply_other)])
+        inputs.update({'df_prices':df_prices})
+        return inputs
+    elif len(inputs['prob_choice'])==3:
+        q_supply_morning=int(np.floor(inputs['PV_penetration']*inputs['Batt_penetration']*inputs['df_demand'].shape[1]))*prob_mat_Batt.loc[inputs['prob_choice'][0],:]*inputs['kWh_dis']
+        q_supply_midday=int(np.floor(inputs['PV_penetration']*inputs['Batt_penetration']*inputs['df_demand'].shape[1]))*prob_mat_PV.loc[inputs['prob_choice'][1],:]*inputs['kWh_dis']
+        q_supply_evening=int(np.floor(inputs['PV_penetration']*inputs['Batt_penetration']*inputs['df_demand'].shape[1]))*prob_mat_Batt.loc[inputs['prob_choice'][2],:]*inputs['kWh_dis']
+        df_prices=pd.DataFrame(index=net_demand.index)
+        df_prices.loc[:,'prices']=net_demand.apply(lambda x:inputs['prices'][find_interval_PQ(x,q_supply_midday)])
+        df_prices.loc[df_prices.index.hour<10,'prices']=net_demand[net_demand.index.hour<10].apply(lambda x:inputs['prices'][find_interval_PQ(x,q_supply_morning)])
+        df_prices.loc[df_prices.index.hour>17,'prices']=net_demand[net_demand.index.hour>17].apply(lambda x:inputs['prices'][find_interval_PQ(x,q_supply_evening)])
 
+        inputs.update({'df_prices':df_prices})
+        return inputs
+    else:
+        print('Warning: this function only takes either one choice of probability for the whole day or three separated for morning, midday and evening')
+        return
 
-    prob_mat=pd.read_csv(inputs['path']+'Input/P_selling_by_price_and_autarky2.txt',sep='\t',index_col=[0])
-    q_supply=int(np.floor(inputs['PV_penetration']*inputs['Batt_penetration']*inputs['df_demand'].shape[1]))*prob_mat.loc[inputs['prob_choice'],:]*inputs['kWh_dis']
-    for i in net_demand:
-        ind=find_interval_PQ(i,q_supply)
-        #print(i)
-        df_prices=np.append(df_prices,inputs['prices'][ind])
-    df_prices=pd.DataFrame(df_prices.T, index=inputs['df_demand'].index)
-    inputs.update({'df_prices':df_prices})
-    return inputs
+    
 def no_community_approach(inputs, system_param):
     '''
     Description
@@ -954,7 +967,7 @@ def community_psycho(Batt_penetration,PV_penetration,reso,path,day_sel,probs_app
     Conv_eff=0.98
     Inv_eff=0.95
     prices=np.array([0, 0.07,.10,.13,.16,.19,.22,.25,.28])
-    prob_choice=0.5
+    prob_choice=[0.35,0.5,.95]
     kWh_dis=2
     case='PV'
     Batt=pc.Battery(10,'NMC')

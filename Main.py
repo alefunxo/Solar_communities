@@ -71,27 +71,27 @@ def set_distributions(path):
     return
 @fn_timer
 def main():
-    '''
-    Description
-    -----------
-    This function handle the deterministic model. It can be use in three modes, choice=True will allow to choice the PV and Battery penetration of the community. If choice=False the script will be run for different PV penetrations and Battery penetrations (predefined, PV_array and Batt_array). pp_only=True will only use predefined outputs (included already in the Output folder) and plot the results in a pdfself. If print_=False the script will not save the outputs in a pdf.
+        '''
+        Description
+        -----------
+        This function handle the deterministic model. It can be use in three modes, choice=True will allow to choice the PV and Battery penetration of the community. If choice=False the script will be run for different PV penetrations and Battery penetrations (predefined, PV_array and Batt_array). pp_only=True will only use predefined outputs (included already in the Output folder) and plot the results in a pdfself. If print_=False the script will not save the outputs in a pdf.
 
-    Parameters
-    ----------
-    choice: Boolean ; Allows to run for different PV penetrations and Battery penetration or for a predefined set.
-    pp_only: Boolean ; Use predefined outputs (included already in the Output folder) and plot the results in a pdfself
-    print_: Boolean ; If true the script will save the outputs in a pdf.
+        Parameters
+        ----------
+        choice: Boolean ; Allows to run for different PV penetrations and Battery penetration or for a predefined set.
+        pp_only: Boolean ; Use predefined outputs (included already in the Output folder) and plot the results in a pdfself
+        print_: Boolean ; If true the script will save the outputs in a pdf.
 
-    Returns
-    ------
-    Nothing. The results are stored in the folder 'Outputs'
+        Returns
+        ------
+        Nothing. The results are stored in the folder 'Outputs'
 
-    TODO
-    ------
-    Do it interactive with the user in order to avoid manual changes when some functions are not needed
-    '''
-    for i in range(4):
-        i=i+1
+        TODO
+        ------
+        Do it interactive with the user in order to avoid manual changes when some functions are not needed
+        '''
+    #for i in range(4):
+        i=3
         if sys.platform=='win32':
             path='C:/Users/alejandro/Documents/GitHub/Psycho/'
         else:
@@ -100,7 +100,7 @@ def main():
         print('Welcome')
         choice=True
         print_=True
-        pp_only=False
+        pp_only=True
         probs_applied=i# 1 for surplus only, 2 for morning+surplus 3 for morning+surplus+evening 4 for evening and surplus
         if pp_only==False:
             #set_distributions(path)

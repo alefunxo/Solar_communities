@@ -73,12 +73,15 @@ def func(pct, allvals):
     absolute = int(pct/100.*np.sum(allvals))
     return "{:.1f}%".format(pct, absolute)
 def graphs_gral(aux_comm,pdf):
+    large=16
     plt.figure(figsize=(10,10))
     aux_comm.gen.plot(label='Community generation')
     aux_comm.demand.plot(label='Community demand')
     plt.xlabel('Time',size=18)
     plt.ylabel('kWh',size=18)
-    plt.legend()
+    plt.legend(loc=2,prop={'size': large})
+
+
     pdf.savefig()
 
     return
@@ -112,10 +115,13 @@ def community_ind(aux_no_comm,aux_comm):
 
     return[data_no_comm,data_comm]
 def graph_prices(df,pdf):
+    large=16
     plt.subplots(1,1,figsize=(10, 10))#, subplot_kw=dict(aspect="equal"))
     axes=df.groupby(df.loc[:,'date'].dt.hour).prices.mean().plot()
     axes.set_xlabel('Hour of the day')
     plt.suptitle('Mean prices throughout the year')
+    plt.xticks(fontsize=large)
+    plt.yticks(fontsize=large)
     #df[df.df==0].prices.plot()
     #plt.tight_layout()
     pdf.savefig()
@@ -134,12 +140,11 @@ def graph_autarky(aux_no_comm,aux_comm,pdf):
     data = [grid,self_PV]
     data2 = [grid_comm,self_PV_comm]
     data3 = [grid_nb,self_PV_nb]
-    labels = ['Electricity imported from the grid','Electricity from the community']
+    labels = ['Electricity imported from the grid','Community autarky']
 
     wedges, texts, autotexts = axs[0].pie(data, autopct=lambda pct: func(pct, data),
                                       textprops=dict(color="w"))
     axs[2].legend(wedges, labels,
-              title="Autarky",
               loc="center left",
               bbox_to_anchor=(.5, -.7, 0.5, 1))
     plt.setp(autotexts, size=14, weight="bold")
@@ -151,8 +156,8 @@ def graph_autarky(aux_no_comm,aux_comm,pdf):
 
     axs[0].set_title("No community",size=18)
 
-    axs[1].set_title("Community \nwith user behaviour",size=18)
-    axs[2].set_title("Community \nwithout user behaviour",size=18)
+    axs[1].set_title("Community \nwith P2P preference",size=18)
+    axs[2].set_title("Community \nwith Autarky preference",size=18)
     plt.setp(autotexts, size=14, weight="bold")
     plt.tight_layout()
     pdf.savefig()
@@ -175,9 +180,9 @@ def graph_sc(data,data2,pdf):
     plt.setp(autotexts, size=14, weight="bold")
     wedges, texts, autotexts = axs[0].pie(data2, autopct=lambda pct: func(pct, data),
                                       textprops=dict(color="w"))
-    axs[1].set_title("Self-consumption community\n no user behaviour",size=18)
+    axs[1].set_title("Self-consumption community\n with autarky preferences",size=18)
 
-    axs[0].set_title("Self-consumption community\nwith user behaviour",size=18)
+    axs[0].set_title("Self-consumption community\nwith P2P preferences",size=18)
     plt.setp(autotexts, size=14, weight="bold")
     plt.tight_layout()
     pdf.savefig()
@@ -192,6 +197,10 @@ def graph_sc(data,data2,pdf):
 
 def graph_average(aux_no_comm,aux_comm,pdf):
     # # Now in average for the whole year, we have:
+    large=16
+    res_load=(aux_comm.demand-aux_comm.gen)
+    res_load=res_load.groupby(res_load.index.hour).mean()
+    res_load.loc[res_load<0]=0
     aux_comm_mean=aux_comm.groupby(aux_comm.index.hour).mean()
     aux_no_comm_mean=aux_no_comm.groupby(aux_no_comm.index.hour).mean()
     plt.figure(figsize=(10,10))
@@ -202,46 +211,55 @@ def graph_average(aux_no_comm,aux_comm,pdf):
     (aux_comm_mean.comm_grid).plot(label='Exported from the community \n to the grid')
     (aux_comm_mean.grid_demand).plot(label='Imported from the grid \n to the community (new demand)')
     #(aux_no_comm_mean.grid_demand).plot(label='grid to community no user ')
-    #plt.ylim(-1,100)
-    plt.title('',size=18)
-    plt.xlabel('Time',size=18)
-    plt.ylabel('kWh',size=18)
-    plt.legend(loc=2)
+    
+    plt.title('',size=large)
+    plt.xlabel('Time',size=large)
+    plt.ylabel('kWh',size=large)
+    plt.xticks(fontsize=large)
+    plt.yticks(fontsize=large)
+    plt.legend(loc=2,prop={'size': large})
     plt.title('Average values per year')
     plt.tight_layout()
     pdf.savefig()
     plt.figure(figsize=(10,10))
     (aux_comm_mean.demand).plot(label='Original community demand')
-    (aux_comm_mean.demand-aux_comm_mean.grid_demand).plot(label='Original community residual demand')
+    (res_load).plot(label='Original community residual demand')
     (aux_comm_mean.grid_demand).plot(label='Imported from the grid \n to the community (new demand)')
     (aux_no_comm_mean.grid_demand).plot(label='Imported from the grid \n to the community (new demand) \n without user behaviour')
     (aux_comm_mean.grid_demand*0).plot(label='zero')
-    #plt.title('Comparison SOC between community with and w/o user behaviour.',size=18)
+    plt.ylim(0,60)
+    #plt.title('Comparison SOC between community with and w/o user behaviour.',size=large)
     #plt.ylim(-1,100)
-    plt.xlabel('Time',size=18)
-    plt.ylabel('kWh',size=18)
+    plt.xlabel('Time',size=large)
+    plt.ylabel('kWh',size=large)
     plt.tight_layout()
-    plt.legend(loc=2)
+    plt.legend(loc=2,prop={'size': large})
+    plt.xticks(fontsize=large)
+    plt.yticks(fontsize=large)
     pdf.savefig()
     plt.figure(figsize=(10,10))
     (aux_comm_mean.gen).plot(label='Community generation')
     (aux_comm_mean.comm_grid).plot(label='Exported from the community to the grid')
     (aux_no_comm_mean.comm_grid).plot(label='Exported from \n the community to the grid \n without user behaviour')
     (aux_comm_mean.grid_demand*0).plot(label='zero')
-    plt.title('Comparison SOC between community with and w/o user behaviour.',size=18)
-    plt.xlabel('Time',size=18)
-    plt.ylabel('kWh',size=18)
-    plt.legend(loc=2)
+    plt.title('Comparison SOC between community with and w/o user behaviour.',size=large)
+    plt.xlabel('Time',size=large)
+    plt.ylabel('kWh',size=large)
+    plt.xticks(fontsize=large)
+    plt.yticks(fontsize=large)
+    plt.legend(loc=2,prop={'size': large})
     plt.figure(figsize=(10,10))
 
     (aux_comm_mean.SOC).plot(label='SOC with behaviour')
     (aux_no_comm_mean.SOC).plot(label='SOC without behaviour')
 
-    plt.title('Comparison SOC between community with and w/o user behaviour.',size=18)
+    plt.title('Comparison SOC between community with and w/o user behaviour.',size=large)
     #(aux_comm_mean.grid_demand*0).plot(label='zero')
-    plt.xlabel('Time',size=18)
-    plt.ylabel('SOC',size=18)
-    plt.legend(loc=2)
+    plt.xlabel('Time',size=large)
+    plt.ylabel('SOC',size=large)
+    plt.xticks(fontsize=large)
+    plt.yticks(fontsize=large)
+    plt.legend(loc=2,prop={'size': 16})
     pdf.savefig()
     return
 
@@ -326,14 +344,14 @@ def Post_processing(Batt_penetration,PV_penetration,print_,path,probs_applied):
             axes=df.reset_index().boxplot(column='bill_comm', by='types')
             axes.set_xticklabels(labels)
             
-            plt.title('With community')
+            plt.title('Community with P2P preferences')
             pdf.savefig()
             
             plt.figure(figsize=(10,10))
             labels = ['No PV No Battery','PV Only','PV and Battery']
             axes=df.reset_index().boxplot(column='bill', by='types')
             axes.set_xticklabels(labels)
-            plt.suptitle('Without community')
+            plt.title('Community with autarky preferences')
             
             pdf.savefig()
             d = pdf.infodict()
