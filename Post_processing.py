@@ -265,7 +265,6 @@ def graph_average(aux_no_comm,aux_comm,pdf):
 
 
 def Post_processing(Batt_penetration,PV_penetration,print_,path,probs_applied):
-
     df_no_comm=pd.read_csv(path+'Output/no_community_{}_{}_{}.csv'.format(PV_penetration,Batt_penetration,probs_applied),encoding='utf8', sep=',',header=0,
         engine='python',date_parser=lambda col: pd.to_datetime(col, utc=True), parse_dates=[1],infer_datetime_format=True,index_col=0,
     names=['index','date','demand','gen','SOC','PV_batt', 'PV_load', 'PV_grid', 'E_dis','Batt_load','Batt_grid','grid_load','PV_losses','Batt_losses','flag','type','df','prices'])
@@ -327,9 +326,12 @@ def Post_processing(Batt_penetration,PV_penetration,print_,path,probs_applied):
     print('amount of times energy when no surplus was exchanged was: {}'.format(df_comm[(df_comm.flag==1)].flag.sum()))
 
     [data_no_comm,data_comm]=community_ind(aux_no_comm,aux_comm)
+    df.columns=['types','bill_comm','bill']
+    #return df
     if print_:
         file=path+'Output/Output_{}_{}_{}_train.pdf'.format(PV_penetration*100,Batt_penetration*100,probs_applied)
         print(file)
+        
         with  PdfPages(file) as pdf:
             
             graphs_gral(aux_comm,pdf)
@@ -337,13 +339,14 @@ def Post_processing(Batt_penetration,PV_penetration,print_,path,probs_applied):
             graph_autarky(aux_no_comm,aux_comm,pdf)
             graph_sc(data_no_comm,data_comm,pdf)
             graph_prices(df_comm,pdf)
-            df.columns=['types','bill_comm','bill']
+            
 
             plt.figure(figsize=(10,10))
             labels = ['No PV No Battery','PV Only','PV and Battery']
             axes=df.reset_index().boxplot(column='bill_comm', by='types')
             axes.set_xticklabels(labels)
-            
+            axes.set_ylim(-800,2000)
+            axes.set_ylabel('\nBill [USD/year]')
             plt.title('Community with P2P preferences')
             pdf.savefig()
             
@@ -351,6 +354,8 @@ def Post_processing(Batt_penetration,PV_penetration,print_,path,probs_applied):
             labels = ['No PV No Battery','PV Only','PV and Battery']
             axes=df.reset_index().boxplot(column='bill', by='types')
             axes.set_xticklabels(labels)
+            axes.set_ylim(-800,2000)
+            axes.set_xlabel('\nBill [USD/year]')
             plt.title('Community with autarky preferences')
             
             pdf.savefig()
