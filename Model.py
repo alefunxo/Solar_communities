@@ -143,7 +143,7 @@ def FPVpanel(T,G_t,minutes):
      #   Outdoor temperature
 
      #   The PV parameters such open-circuit voltage are not as inputs.  But the
-     #   must be upgrated if a new model of PV panels is used.
+     #   must be upgraded if a new model of PV panels is used.
 
      #   Also the PV script to obtain both series and Parallel resistance must
      #   be run firstly in order to calculate them.
@@ -256,6 +256,25 @@ def FPVpanel(T,G_t,minutes):
 
 ########################################MAIN###################################
 def inputs(df,phi,res,beta,gamma):
+    '''
+    Description
+    -----------
+    
+    
+    Parameters
+    ----------
+    df: DataFrame; includes Temperature in Kelvin or Celcius and GHI in W/m2!!!!
+    phi: float; latitude where the panel will be installed
+    res: float; temporal resolution
+    beta: numpy array; inclination
+    gamma: numpy array; azimuth
+    
+    Returns
+    ------
+    
+    TODO
+    ------
+    '''
     beta=(beta/180)*np.pi
     N_array=11
     N_housePV=1
@@ -278,7 +297,7 @@ def inputs(df,phi,res,beta,gamma):
 
         G=np.array(df.GHI[df.index.dayofyear==n+1].values)
         T=np.array(df.Temperature[df.index.dayofyear==n+1].values)
-
+        #print(G)
         #   Tilted radiation
         #   I obtain tminutese best inclination of tminutese panel
         G_t=Ftiltedradiation(G,beta,n,gamma,len(G),phi)
