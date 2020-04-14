@@ -1,0 +1,9 @@
+!/src
+!/test
+!*.py
+!*.ipynb
+!*/
+*.xlsx
+*.xlx
+*.csv
+*.txt
