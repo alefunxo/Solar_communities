@@ -11,6 +11,9 @@ import csv
 import os
 import datetime as dt
 import warnings
+import multiprocessing as mp
+from functools import partial
+import threading
 import pickle
 warnings.filterwarnings('error')
 
@@ -111,7 +114,7 @@ def plot_dispatch(pv, demand, E, week=30):
     axes[2].legend()
     return
 
-def plot_dispatch_comm(pv, demand, E, week=30,flag=False):
+def plot_dispatch_comm(pv, demand, E, week=30,flag=False,prices=None):
     """ Visualize dispatch algorithm for a specific week for the whole community
     Parameters:
         demand (pd.Series): demand production
@@ -154,15 +157,22 @@ def plot_dispatch_comm(pv, demand, E, week=30,flag=False):
         axes[0].fill_between(pv_sliced.index, direct_self_consumption, pv_sliced , color='gold', alpha=.3,label='Excess PV')
 
         axes[0].fill_between(grid2load_sliced.index,self_consumption,demand_sliced,color='red',alpha=.2, label='grid2load')
+    
     axes[0].set_ylim([0, axes[0].get_ylim()[1] ])
     axes[0].set_ylabel('Power (kW)')
 
     axes[1].fill_between(LevelOfCharge.index, 0, LevelOfCharge, color='grey', alpha=.2, label='SOC')
     axes[1].set_ylabel('State of Charge (kWh)')
+    if prices is not None:
+        ax2 = axes[2].twinx()
+        ax2.plot(prices[sliced_index],label='Prices')
+        ax2.legend(loc=4)
+
 
     axes[2].fill_between(inv2grid.index, 0, inv2grid, color='green', alpha=.2,label='injected2grid')
     axes[2].fill_between(inv2grid.index, 0, -grid2load, color='red', alpha=.2,label='grid drawn')
     axes[2].set_ylabel('In/out from grid (kW)')
+    axes[0].set_xlim([grid2load_sliced.index[0],grid2load_sliced.index[-1]])
     axes[0].legend()
     axes[1].legend()
     axes[2].legend()
@@ -206,10 +216,10 @@ def print_analysis_prices(pv, demand,retail,export, param, E,isCommunity=False,h
     SelfConsumptionRate = SelfConsumption / TotalPV * 100             # in %
     SelfSufficiencyRate = SelfConsumption / TotalLoad * 100
     Bill=((E['grid2load'] * timestep) * retail - (E['inv2grid'] * timestep ) * export).sum()
-    Batt_revenue=((E['store2load']*param['InverterEfficiency']*timestep*retail-
+    Batt_revenue=((E['store2inv']*param['InverterEfficiency']*timestep*retail-
                    E['pv2store']*param['InverterEfficiency']*timestep*export)).sum()
     
-    print ('Total yearly consumption: {:1g} kWh'.format(TotalLoad))
+    print ('\nTotal yearly consumption: {:1g} kWh'.format(TotalLoad))
     print ('Total PV production: {:1g} kWh'.format(TotalPV))
     print ('Self Consumption: {:1g} kWh'.format(SelfConsumption))
     print ('Total fed to the grid: {:1g} kWh'.format(TotalToGrid))
@@ -243,28 +253,28 @@ def print_analysis_prices(pv, demand,retail,export, param, E,isCommunity=False,h
         print ('Number of equivalent full cycles per year: {:1g} '.format(Nfullcycles))
         print ('Average Charging/Discharging depth: {:1g}\n\n'.format(AverageDepth))
         
-        out = { 'SCR': SelfConsumptionRate, # 
-                'SSR':SelfSufficiencyRate, # 
-                'EFC': Nfullcycles, # 
-                'Demand_peak': E['grid2load'].max(), # 
-                'Inj_peak': E['inv2grid'].max(), #
-                'avg_dod': AverageDepth, #
-                'bill': Bill,
-                'Batt_revenue':Batt_revenue,
+        out = { 'SCR': SelfConsumptionRate.round(1), # 
+                'SSR':SelfSufficiencyRate.round(1), # 
+                'EFC': Nfullcycles.round(1), # 
+                'Demand_peak': E['grid2load'].max().round(1), # 
+                'Inj_peak': E['inv2grid'].max().round(1), #
+                'avg_dod': AverageDepth.round(1), #
+                'bill': Bill.round(1),
+                'Batt_revenue':Batt_revenue.round(1),
                 'Batt_penetration':param['batt_penetration'],
                 'PV_penetration':param['pv_penetration'],
                 'seed':param['seed'],
                 'hh':hh
                 }
     else:
-        out = { 'SCR': SelfConsumptionRate, # 
-                'SSR':SelfSufficiencyRate, # 
+        out = { 'SCR': SelfConsumptionRate.round(1), # 
+                'SSR':SelfSufficiencyRate.round(1), # 
                 'EFC': None, # 
-                'Demand_peak': E['grid2load'].max(), # 
-                'Inj_peak': E['inv2grid'].max(), #
+                'Demand_peak': E['grid2load'].max().round(1), # 
+                'Inj_peak': E['inv2grid'].max().round(1), #
                 'avg_dod': None, #
-                'bill': Bill,
-                'Batt_revenue':Batt_revenue,
+                'bill': Bill.round(1),
+                'Batt_revenue':Batt_revenue.round(1),
                 'Batt_penetration':param['batt_penetration'],
                 'PV_penetration':param['pv_penetration'],
                 'seed':param['seed'],
@@ -573,7 +583,7 @@ def dispatch_max_sc_bhv(pv, demand, bhv,prices_binned,inv_size,param , return_se
         
     return out
 @fn_timer
-def flag_selection(df,list_product,community_size,seed):
+def flag_selection(df,list_product,list_pv_penetration,list_batt_penetration,community_size,seed):
     '''
     Function that randomly selects the households that will have PV only and those with PV and battery
     ''' 
@@ -595,29 +605,64 @@ def flag_selection(df,list_product,community_size,seed):
             l+=1
         j+=1
     return df    
+def price_generation(dict_sc_comm, param_tech_no_batt):
+    '''
+    Description
+    -----------
+    Parameters
+    ------
     
+    Return
+    ------
+    
+
+    TODO
+    ------
+    '''   
+    prob_mat_less12=pd.read_csv('../Input/P_selling_by_price_and_autarky_early.txt',sep=',',index_col=[0])
+    prob_mat_more12=pd.read_csv('../Input/P_selling_by_price_and_autarky_late.txt',sep=',',index_col=[0])
+    total_batteries=int(np.floor(param_tech_no_batt['pv_penetration']/100*param_tech_no_batt['batt_penetration']/100*
+                                  param_tech_no_batt['community_size']))
+    q_supply_less12=total_batteries*prob_mat_less12.iloc[1] # traded kWh per hour according to SOC 60% (iloc[1])
+    q_supply_more12=total_batteries*prob_mat_more12.iloc[1]
+    df_prices=pd.DataFrame(index=dict_sc_comm['grid2load'].index)
+    df_prices.loc[:,'prices_less12']=dict_sc_comm['grid2load'].apply(lambda x:param_tech_no_batt['Price'][find_interval_PQ(x,q_supply_less12)])
+    df_prices.loc[:,'prices_more12']=dict_sc_comm['grid2load'].apply(lambda x:param_tech_no_batt['Price'][find_interval_PQ(x,q_supply_more12)])
+    df_prices.loc[:,'final_prices']=0
+    #get the sp hours
+    delta=dt.timedelta(hours=12)
+    sp_hour=dict_sc_comm['inv2grid'].ne(0).groupby([dict_sc_comm['inv2grid'].index.month,dict_sc_comm['inv2grid'].index.day]).idxmax().droplevel(1).reset_index(drop=True)
+    twelve_bf=sp_hour-delta
+    for i in range(len(df_prices.index)):
+        if (df_prices.index[i]<=sp_hour[int(np.floor((i)/24*timestep))]) & (df_prices.index[i]>twelve_bf[int(np.floor((i)/24*timestep))]) :
+            df_prices.loc[df_prices.index[i],'final_prices']=df_prices.loc[df_prices.index[i],'prices_more12']
+        else:
+            df_prices.loc[df_prices.index[i],'final_prices']=df_prices.loc[df_prices.index[i],'prices_less12']
+    return df_prices.final_prices
+
 @fn_timer
-def main():
-    first_time=True
-    community_size=50
-    timestep=0.25 # in hours 0.25 is 15 minutes
-    seed=1
-    pv_penetration=50
-    batt_penetration=50
-    #ILR=1.2
+def core(dict_input,seed):
     
-    retail_price_sc=np.ones(pv2inv.shape[0])*0.29
-    export_price_sc=np.ones(pv2inv.shape[0])*0.04
+    print('---------------------seed------------------')
+    print(seed)
+    df_CH_kW=dict_input['df_CH_kW']
+    df_nat_pv_15=dict_input['df_nat_pv_15']
+    retail_price_sc=dict_input['retail_price_sc']
+    export_price_sc=dict_input['export_price_sc']
+    pv_penetration=dict_input['pv_penetration']
+    batt_penetration=dict_input['batt_penetration']
+    community_size=dict_input['community_size']
+    timestep=dict_input['timestep']
     
     param_tech = {'BatteryCapacity': 10,
-              'BatteryEfficiency': .91,
-              'InverterEfficiency': .94,
-              'timestep': timestep,
-              'MaxPower': 4,
-              'pv_penetration':pv_penetration,
-              'batt_penetration':batt_penetration,
-              'seed':seed
-             }
+          'BatteryEfficiency': .91,
+          'InverterEfficiency': .94,
+          'timestep': timestep,
+          'MaxPower': 4,
+          'pv_penetration':pv_penetration,
+          'batt_penetration':batt_penetration,
+          'seed':seed
+         }
     param_tech_no_batt = {'BatteryCapacity': 0,
                   'BatteryEfficiency': .91,
                   'InverterEfficiency': .94,
@@ -636,24 +681,20 @@ def main():
                   'batt_penetration':batt_penetration,
                   'seed':seed
                  }
+    df=pd.DataFrame(df_CH_kW.loc[:,(df_CH_kW.sum()<(7500/timestep))&(df_CH_kW.columns!='E_PV')].sample(n=community_size,axis=1,random_state=seed).columns)
     
-    
-    df_CH=pd.read_csv('../Input/df_CH_Marzia3.csv', encoding='utf8', sep=',',usecols=[*range(0, 669)],
-                              engine='python',date_parser=lambda col: pd.to_datetime(col, utc=True),infer_datetime_format=True,index_col=0)
-    df_CH.index=df_CH.index.tz_convert('Europe/Brussels')
-    if timestep==1:
-        df_CH=df_CH.resample('1H').sum()
-    else:
-        df_CH_kW=df_CH/timestep #data must be in kW
-    max_PV=10
-    if first_time:   
-        path='../Input/'
-        df_pv_ch=pd.read_excel(path+'PV_beneficiaires_Swiss.xlsx')
-        df_nat=df_pv_ch[(df_pv_ch['Anlage_Projekt-Bezeichnung']=='natürliche Person')]
-        df_nat_pv=df_nat[(df_nat['Anlage_Energieträger']=='Photovoltaik')]
-        df_nat_pv_15=df_nat_pv[df_nat_pv['Leistung [kW]']<max_PV]['Leistung [kW]'].reset_index(drop=True)
-    if not first_time:
-        selection=pd.read_csv('../Input/selection.csv')
+    #df=pd.DataFrame(df_CH.loc[:,(df_CH.sum()<7500)&(df_CH.columns!='E_PV')].sample(n=community_size,axis=1).columns)
+    selection=pd.concat([df_nat_pv_15.round(1).sample(n=community_size,random_state=seed).reset_index(drop=True),df],axis=1)
+    selection.columns=['PV_size','name']
+    list_pv_penetration=[100,75,50,25]# %
+    list_batt_penetration=[100,75,50,25]# %
+    list_product=list(itertools.product(list_pv_penetration,list_batt_penetration))
+    selection=flag_selection(selection,list_product,list_pv_penetration,list_batt_penetration,community_size,seed)
+    #print(selection.sum())
+    #selection.to_csv('../Input/selection.csv',index=False)
+    #if not first_time:
+        #selection=pd.read_csv('../Input/selection.csv')
+    print('------------Running the Self-consumption community------------')
     nested_out={}
     j=0
     k=0
@@ -671,7 +712,7 @@ def main():
                 k+=1
         else: #No PV
             nested_out[i]=dispatch_max_sc(df_CH_kW.E_PV*0,df_CH_kW.loc[:,str(selection.name[i])],0,param_tech_no_batt)
-    
+
     #get all the data in a single dict
     pv2inv=pd.DataFrame()
     res_pv=pd.DataFrame()
@@ -723,19 +764,169 @@ def main():
     out_comm_final['store2grid']=nested_dict['store2grid']
     out_comm_final['LevelOfCharge']=nested_dict['LevelOfCharge']
     out_comm_final['PV_size_comm']=PV_size_comm
-    out_comm_final['df']=df_CH
+    out_comm_final['df']=df_CH_kW
     out_comm_final['param_tech']=param_tech
     out_comm_final['nested_dict']=nested_dict
     out_comm_final['selection']=selection
     out=print_analysis_prices(df_CH_kW.E_PV*PV_size_comm, df_CH_kW.loc[:,df.iloc[:,0]].sum(axis=1),retail_price_sc,export_price_sc,
                       param_tech_comm,out_comm_final,isCommunity=True)
-
+    print('------------Saving results------------')
+    global_lock = threading.Lock()
+    while global_lock.locked():
+        continue
+    global_lock.acquire()
     dict_to_csv(out,'../Output/test1')
+    global_lock.release()
+    print('------------Running the P2P community------------')
+    df_bhv=pd.read_csv('../Input/table_bhv.csv',index_col=[0])
+    tmp_pair=pd.DataFrame(map(lambda X: dict({'id':X[0],'hh':X[1]}), list(zip(list(selection.name.unique()),list(df_bhv[df_bhv.will==1].hh.unique())))))
+
+    df_bhv_paired=pd.merge(left=tmp_pair, right=df_bhv, left_on='hh', right_on='hh')
+
+    df_bhv_paired.Price/=100
+
+    df_bhv_paired['Price_binned']=(np.digitize(df_bhv_paired.Price,[0.04,0.12,0.20,0.28]))
+
+    df_bhv_paired['SOC_binned']=(np.digitize(df_bhv_paired.SOC,[30,60,90]))
+    param_tech.update({'Price':[0.04,0.12,0.20,0.28]})
+    param_tech_comm.update({'Price':[0.04,0.12,0.20,0.28]})
+    param_tech_no_batt.update({'Price':[0.04,0.12,0.20,0.28]})
+    df_prices=price_generation(out_comm_final, param_tech_no_batt)
+    prices_binned=np.digitize(df_prices,bins=[0.04,0.12,0.20,0.28])
+    prices_binned[prices_binned==0]=1
+    nested_out_p2p={}
+    j=0
+    k=0
+    PV_size_comm=0
+    for i in selection.index:
+        print(i, end='')
+        if selection.loc[i,'sub_'+str(pv_penetration)+'_100']:#all with PV
+            inv_size=max(param_tech['MaxPower'],selection.PV_size[i])#selection.PV_size[i]/ILR
+            PV_size_comm+=selection.PV_size[i]
+            
+            if selection.loc[i,'sub_'+str(pv_penetration)+'_'+str(batt_penetration)]: #if battery
+                nested_out_p2p[i]=dispatch_max_sc_bhv(df_CH_kW.E_PV*selection.PV_size[i],df_CH_kW.loc[:,str(selection.name[i])],
+                                                  df_bhv_paired[df_bhv_paired.id==selection.name[i]],prices_binned,inv_size,param_tech)
+                j+=1
+            else: #if only PV battery=0 kWh, thus no bhv needed
+                nested_out_p2p[i]=dispatch_max_sc(df_CH_kW.E_PV*selection.PV_size[i],df_CH_kW.loc[:,str(selection.name[i])],
+                                              inv_size,param_tech_no_batt)
+                k+=1
+        else: #No PV, thus no bhv needed
+            nested_out_p2p[i]=dispatch_max_sc(df_CH_kW.E_PV*0,df_CH_kW.loc[:,str(selection.name[i])],0,param_tech_no_batt)
+
+    #get all the data in a single dict
+    pv2inv_p2p=pd.DataFrame()
+    res_pv_p2p=pd.DataFrame()
+    pv2store_p2p=pd.DataFrame()
+    inv2load_p2p=pd.DataFrame()
+    grid2load_p2p=pd.DataFrame()
+    store2inv_p2p=pd.DataFrame()
+    inv2curt_p2p=pd.DataFrame()
+    LevelOfCharge_p2p=pd.DataFrame()
+    inv2grid_p2p=pd.DataFrame()
+    store2grid_p2p=pd.DataFrame()
+    store2load_p2p=pd.DataFrame()
+    batt_losses_p2p=pd.DataFrame()
+    inv_losses_p2p=pd.DataFrame()
+
+    for i in nested_out_p2p.keys():
+        pv2inv_p2p['pv2inv'+str(i)]=nested_out_p2p[i]['pv2inv']
+        inv2curt_p2p['inv2curt'+str(i)]=nested_out_p2p[i]['inv2curt']
+        pv2store_p2p['pv2store'+str(i)]=nested_out_p2p[i]['pv2store']
+        inv2load_p2p['inv2load'+str(i)]=nested_out_p2p[i]['inv2load']
+        batt_losses_p2p['batt_losses'+str(i)]=nested_out_p2p[i]['batt_losses']
+        inv_losses_p2p['inv_losses'+str(i)]=nested_out_p2p[i]['inv_losses']
+        store2inv_p2p['store2inv'+str(i)]=nested_out_p2p[i]['store2inv']
+        LevelOfCharge_p2p['LevelOfCharge'+str(i)]=nested_out_p2p[i]['LevelOfCharge']
+        res_pv_p2p['res_pv'+str(i)]=nested_out_p2p[i]['res_pv']#not important, recalculated later
+        inv2grid_p2p['inv2grid'+str(i)]=nested_out_p2p[i]['inv2grid']#not important, recalculated later
+        grid2load_p2p['grid2load'+str(i)]=nested_out_p2p[i]['grid2load']#not important, recalculated later
+        store2load_p2p['store2load'+str(i)]=nested_out_p2p[i]['store2load']
+        store2grid_p2p['store2grid'+str(i)]=nested_out_p2p[i]['store2grid']
+    nested_dict_p2p={'pv2inv':pv2inv_p2p.sum(axis=1),'pv2store':pv2store_p2p.sum(axis=1),'inv2load':inv2load_p2p.sum(axis=1),
+                 'grid2load':grid2load_p2p.sum(axis=1),'store2inv':store2inv_p2p.sum(axis=1),'LevelOfCharge':LevelOfCharge_p2p.sum(axis=1),
+                 'inv2grid':inv2grid_p2p.sum(axis=1),'res_pv':res_pv_p2p.sum(axis=1),'store2grid':store2grid_p2p.sum(axis=1),
+                 'store2load':store2load_p2p.sum(axis=1),'inv_losses':inv_losses_p2p.sum(axis=1),
+                 'batt_losses':batt_losses_p2p.sum(axis=1),'inv2curt':inv2curt_p2p.sum(axis=1)}
     
+    out_comm_res_p2p=dispatch_max_sc(nested_dict_p2p['inv2grid'],nested_dict_p2p['grid2load'],1e10,param_tech_comm)
 
+    out_comm_final_p2p={}
+    out_comm_final_p2p['pv2inv']=nested_dict_p2p['pv2inv'] # DC from hh with PV
+    out_comm_final_p2p['pv2store']=nested_dict_p2p['pv2store'] # DC PV 2 batt from hh with PV
+    out_comm_final_p2p['inv2load']=(nested_dict_p2p['inv2load']+out_comm_res_p2p['inv2load']) # AC from all hh
+    out_comm_final_p2p['store2inv']=nested_dict_p2p['store2inv'] # DC  from hh with PV and batt
+    out_comm_final_p2p['LevelOfCharge']=nested_dict_p2p['LevelOfCharge'] # kWh  from hh with PV and batt
+    out_comm_final_p2p['res_pv']=out_comm_res_p2p['res_pv'] # DC  from hh with PV
+    out_comm_final_p2p['inv2grid']=out_comm_res_p2p['inv2grid'] # AC from hh with PV
+    out_comm_final_p2p['grid2load']=out_comm_res_p2p['grid2load'] # AC  from all hh
+    out_comm_final_p2p['inv2curt']=nested_dict_p2p['inv2curt'] # DC  from hh with PV
+    out_comm_final_p2p['batt_losses']=nested_dict_p2p['batt_losses']
+    out_comm_final_p2p['inv_losses']=nested_dict_p2p['inv_losses']
+    out_comm_final_p2p['store2grid']=nested_dict_p2p['store2grid'] # AC
+    out_comm_final_p2p['store2load']=nested_dict_p2p['store2load'] # AC
+    out_comm_final_p2p['LevelOfCharge']=nested_dict_p2p['LevelOfCharge']
+    out_comm_final_p2p['PV_size_comm']=PV_size_comm
+    out_comm_final_p2p['df']=df_CH_kW
+    out_comm_final_p2p['param_tech']=param_tech
+    out_comm_final_p2p['nested_dict']=nested_dict_p2p
+    out_comm_final_p2p['selection']=selection
+    out_comm_final_p2p['price']=selection
+    out=print_analysis_prices(df_CH_kW.E_PV*PV_size_comm,df_CH_kW.loc[:,df.iloc[:,0]].sum(axis=1),prices_binned,
+                          prices_binned,param_tech_comm,out_comm_final_p2p,isCommunity=True)
 
+    print('------------Saving P2P results------------')
+    global_lock = threading.Lock()
+    while global_lock.locked():
+        continue
+    global_lock.acquire()
+    dict_to_csv(out,'../Output/test2')
+    global_lock.release()
 
-
+def main():
+    
+    print('------------Welcome to P2P vs Solar community------------')
+    print('------------Defining the community parameters------------')
+    community_size=50
+    timestep=0.25 # in hours 0.25 is 15 minutes
+    #seed=1
+    pv_penetration=50
+    batt_penetration=50
+    #ILR=1.2
+    
+    retail_price_sc=np.ones(int(365*24/timestep))*0.29
+    export_price_sc=np.ones(int(365*24/timestep))*0.04
+    
+    
+    
+    print('------------Loading the datasets------------')
+    df_CH=pd.read_csv('../Input/df_CH_Marzia3.csv', encoding='utf8', sep=',',usecols=[*range(0, 669)],
+                              engine='python',date_parser=lambda col: pd.to_datetime(col, utc=True),infer_datetime_format=True,index_col=0)
+    df_CH.index=df_CH.index.tz_convert('Europe/Brussels')
+    if timestep==1:
+        df_CH=df_CH.resample('1H').sum()
+    else:
+        df_CH_kW=df_CH/timestep #data must be in kW
+    max_PV=10
+    path='../Input/'
+    df_pv_ch=pd.read_csv(path+'PV_beneficiaires_Swiss.csv',index_col=[0])
+    df_nat=df_pv_ch[(df_pv_ch['Anlage_Projekt-Bezeichnung']=='natürliche Person')]
+    df_nat_pv=df_nat[(df_nat['Anlage_Energieträger']=='Photovoltaik')]
+    df_nat_pv_15=df_nat_pv[df_nat_pv['Leistung [kW]']<max_PV]['Leistung [kW]'].reset_index(drop=True)
+    mp.freeze_support()
+    print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
+    dict_input={'df_CH_kW':df_CH_kW,'df_nat_pv_15':df_nat_pv_15,'retail_price_sc':retail_price_sc,'export_price_sc':export_price_sc,
+                'pv_penetration':pv_penetration,'batt_penetration':batt_penetration, 'community_size':community_size,'timestep':timestep}
+    seed=np.arange(0,50)
+    
+    pool=mp.Pool(processes=5)
+    func = partial(core, dict_input)
+    pool.map(func, seed)
+    pool.close()
+    pool.join()
+    
+    print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
 
 
 
