@@ -694,6 +694,9 @@ def price_generation(dict_sc_comm, param_tech_no_batt):
     '''   
     prob_mat_less12=pd.read_csv('../Input/P_selling_by_price_and_autarky_early.txt',sep=',',index_col=[0])
     prob_mat_more12=pd.read_csv('../Input/P_selling_by_price_and_autarky_late.txt',sep=',',index_col=[0])
+    if param_tech_no_batt['test_sc']==True:
+        prob_mat_more12=prob_mat_more12*0
+        prob_mat_more12=prob_mat_more12*0
     total_batteries=int(np.floor(param_tech_no_batt['pv_penetration']/100*param_tech_no_batt['batt_penetration']/100*
                                   param_tech_no_batt['community_size']))
     q_supply_less12=total_batteries*prob_mat_less12.iloc[1] # traded kWh per hour according to SOC 60% (iloc[1])
